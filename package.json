@@ -1,7 +1,7 @@
 {
     "name": "sas-viya-api-wrappers-js",
     "private": false,
-    "version": "1.0.3",
+    "version": "1.0.4",
     "type": "module",
     "license": "Apache-2.0",
     "author": {
@@ -15,13 +15,13 @@
     "files": [
         "dist"
     ],
-    "main": "./dist/main.cjs.js",
+    "main": "./dist/main.umd.js",
     "module": "./dist/main.es.js",
-    "typings": "./dist/types/main.d.ts",
+    "typings": "./dist/main.d.ts",
     "exports": {
         ".": {
             "import": "./dist/main.es.js",
-            "require": "./dist/main.cjs.js"
+            "require": "./dist/main.umd.js"
         }
     },
     "types": "./dist/types/index.d.ts",

@@ -4,6 +4,7 @@ import { typescriptPaths } from 'rollup-plugin-typescript-paths'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 
+
 export default defineConfig({
     resolve: {
         alias: [
@@ -27,21 +28,16 @@ export default defineConfig({
         reportCompressedSize: true,
         lib: {
             entry: [resolve(__dirname, 'src/main.ts')],
+            name: 'sas-viya-api-wrappers-js',
             fileName: 'main',
-            formats: ['es', 'cjs'],
         },
         rollupOptions: {
-            external: [],
-            plugins: [
-                typescriptPaths({
-                    preserveExtensions: true,
-                }),
-                typescript({
-                    sourceMap: false,
-                    declaration: true,
-                    outDir: 'dist',
-                }),
-            ],
+            external: ['@sassoftware/sas-auth-browser'],
+            output: {
+                globals: {
+                    '@sassoftware/sas-auth-browser': 'SASAuth',
+                },
+            }
         },
     },
     preview: {
