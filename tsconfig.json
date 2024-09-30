@@ -1,23 +1,25 @@
 {
     "compilerOptions": {
-        "baseUrl": "./",
         "target": "ESNext",
-        "useDefineForClassFields": true,
-        "module": "ESNext",
-        "moduleResolution": "node",
-        "isolatedModules": true,
-        "strict": true,
-        "jsx": "preserve",
-        "sourceMap": true,
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "paths": {
-            "@/*": ["src/*"]
-        },
-        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "types": ["vite/client", "node"],
+        "allowJs": false,
         "skipLibCheck": true,
-        "outDir": "dist",
-        "declaration": true
+        "esModuleInterop": false,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "preserve",
+        "baseUrl": "./",
+        "paths": {
+            "~/*": ["src/*"]
+        }
     },
-    "include": ["vite.config.*", "env.d.ts", "src/**/*"]
+    "include": ["./src"],
+    "exclude": ["node_modules"]
 }

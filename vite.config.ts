@@ -1,34 +1,42 @@
+import typescript from '@rollup/plugin-typescript'
 import { resolve } from 'path'
+import { typescriptPaths } from 'rollup-plugin-typescript-paths'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
     resolve: {
-        alias: {
-            '@/': new URL('./src/', import.meta.url).pathname,
-        },
+        alias: [
+            {
+                find: '~',
+                replacement: resolve(__dirname, './src'),
+            },
+        ],
     },
     plugins: [],
-    server: { 
+    server: {
         port: 3000,
     },
     build: {
         manifest: true,
         minify: true,
         reportCompressedSize: true,
-        outDir: 'dist',
         lib: {
-            entry: [resolve(__dirname, 'src/index.ts')],
-            name: 'sas-viya-api-wrappers-js',
-            fileName: (format) => `sas-viya-api-wrappers-js.${format}.js`,
+            entry: [resolve(__dirname, 'src/main.ts')],
+            fileName: 'main',
+            formats: ['es', 'cjs'],
         },
-        target: 'esnext',
         rollupOptions: {
-            external: ['@sassoftware/sas-auth-browser'],
-            output: {
-                globals: {
-                    '@sassoftware/sas-auth-browser': 'SASAuthBrowser',
-                },
-            },
+            external: [],
+            plugins: [
+                typescriptPaths({
+                    preserveExtensions: true,
+                }),
+                typescript({
+                    sourceMap: false,
+                    declaration: true,
+                    outDir: 'dist',
+                }),
+            ],
         },
     },
     preview: {
