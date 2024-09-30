@@ -1,6 +1,6 @@
 import { CookieAuthenticationCredential } from '@sassoftware/sas-auth-browser'
-import { callViyaApi } from './lib/callViyaApi'
-import { ApiParameters, ApiResponse, Item, Link, OutputType } from './lib/callViyaApi.types'
+import { callViyaApi } from './callViyaApi'
+import { ApiParameters, ApiResponse, Item, Link, OutputType } from './callViyaApi.types'
 
 export default class ComputeSession {
     contextName: string
