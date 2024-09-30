@@ -1,9 +1,6 @@
-import typescript from '@rollup/plugin-typescript'
 import { resolve } from 'path'
-import { typescriptPaths } from 'rollup-plugin-typescript-paths'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
-
 
 export default defineConfig({
     resolve: {
@@ -29,7 +26,7 @@ export default defineConfig({
         lib: {
             entry: [resolve(__dirname, 'src/main.ts')],
             name: 'sas-viya-api-wrappers-js',
-            fileName: 'main',
+            fileName: 'sas-viya-api-wrappers-js',
         },
         rollupOptions: {
             external: ['@sassoftware/sas-auth-browser'],
@@ -37,7 +34,7 @@ export default defineConfig({
                 globals: {
                     '@sassoftware/sas-auth-browser': 'SASAuth',
                 },
-            }
+            },
         },
     },
     preview: {
