@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0" />
+        <title>viya-apis-js</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script
+            type="module"
+            src="/src/ComputeSession.ts"></script>
+        <script type="module">
+            import ComputeSession from './src/ComputeSession'
+
+            const computeSession = new ComputeSession(
+                'https://server.demo.sas.com',
+                'SAS Job Execution compute context'
+            )
+            const libraries = await computeSession.getLibraries()
+
+            const populateDropdown = (dropdown, options) => {
+                const topElement = document.createElement('option')
+                topElement.text = '-- Select --'
+                topElement.disabled = true
+                topElement.selected = true
+                dropdown.appendChild(topElement)
+                options.forEach((option) => {
+                    const optionElement = document.createElement('option')
+                    optionElement.value = option
+                    optionElement.text = option
+                    dropdown.appendChild(optionElement)
+                })
+                dropdown.disabled = false
+            }
+
+            const App = document.getElementById('app')
+            const div = document.createElement('div')
+            const selectLibrary = document.createElement('select')
+            if (libraries) {
+                populateDropdown(selectLibrary, libraries)
+            }
+            selectLibrary.onchange = async () => {
+                selectTable.replaceChildren()
+                selectTable.disabled = true
+                selectColumn.replaceChildren()
+                selectColumn.disabled = true
+                selectValue.replaceChildren()
+                selectValue.disabled = true
+                const data = await computeSession.getTables(selectLibrary.value)
+                if (data) {
+                    populateDropdown(selectTable, data)
+                }
+            }
+            const selectTable = document.createElement('select')
+            selectTable.onchange = async () => {
+                selectColumn.replaceChildren()
+                selectColumn.disabled = true
+                selectValue.replaceChildren()
+                selectValue.disabled = true
+                const data = await computeSession.getColumns(selectLibrary.value, selectTable.value)
+                if (data) {
+                    populateDropdown(selectColumn, data)
+                }
+            }
+            const selectColumn = document.createElement('select')
+            selectColumn.onchange = async () => {
+                selectValue.replaceChildren()
+                selectValue.disabled = true
+                const data = await computeSession.getValues(
+                    selectLibrary.value,
+                    selectTable.value,
+                    selectColumn.value
+                )
+                if (data) {
+                    populateDropdown(selectValue, data)
+                }
+            }
+            const selectValue = document.createElement('select')
+
+            div.appendChild(selectLibrary)
+            div.appendChild(selectTable)
+            div.appendChild(selectColumn)
+            div.appendChild(selectValue)
+            App?.appendChild(div)
+        </script>
+    </body>
+</html>
