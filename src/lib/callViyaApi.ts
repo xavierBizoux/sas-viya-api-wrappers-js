@@ -17,6 +17,9 @@ const generateHeaders = (link: Link, options?: ApiParameters) => {
     if (link.responseType) {
         headers.set('Accept', `${link.responseType}+json`)
     }
+    if (link.method === 'DELETE') {
+        headers.set('Accept', 'application/vnd.sas.error+json,application/json')
+    }
     if (csrfToken) {
         headers.set('x-csrf-token', csrfToken)
     }
@@ -27,10 +30,12 @@ const generateHeaders = (link: Link, options?: ApiParameters) => {
 const generateUrl = (server: string, link: Link, options?: ApiParameters) => {
     let url = `${server}${link.href}`
     const urlParams = new URLSearchParams()
-    if (options?.limit) {
-        urlParams.set('limit', options.limit.toString())
-    } else {
-        urlParams.set('limit', defaultLimit.toString())
+    if (link.method !== 'DELETE') {
+        if (options?.limit) {
+            urlParams.set('limit', options.limit.toString())
+        } else {
+            urlParams.set('limit', defaultLimit.toString())
+        }
     }
     if (options?.filter) {
         urlParams.set('filter', options.filter)
@@ -67,11 +72,9 @@ export const callViyaApi = async ({
     // User authentication before executing calls to REST APIs
     try {
         // Check if user is authenticated
-        console.log('check')
         await sasInstance.checkAuthenticated()
     } catch {
-        console.log('error')
-        await sasInstance.invalidateCache()
+        sasInstance.invalidateCache()
         await sasInstance.loginPopup()
     }
     // Generate elements for API call
@@ -87,6 +90,9 @@ export const callViyaApi = async ({
                 csrfToken = response.headers.get('x-csrf-token')
             }
             // Transform the response into a JSON object
+            if (response.status === 204) {
+                return null
+            }
             const json = await response.json()
             // Return the response
             return json
@@ -99,7 +105,7 @@ export const callViyaApi = async ({
         if (typeof error === 'string') {
             console.error(`An error occurred while calling ${link.href}: ${error}`)
         } else if (error instanceof Error) {
-            console.error(`An error occurred while calling ${link.href}: ${error.message}`)
+            console.error(`An error occurred while calling ${link.href}: ${error?.message}`)
         }
         throw error
     }

@@ -1,7 +1,7 @@
 {
     "name": "sas-viya-api-wrappers-js",
     "private": false,
-    "version": "1.0.5",
+    "version": "1.1.0",
     "type": "module",
     "license": "Apache-2.0",
     "author": {
@@ -37,5 +37,8 @@
     },
     "dependencies": {
         "@sassoftware/sas-auth-browser": "^0.2.0"
-    }
+    },
+    "bundleDependencies": [
+        "@sassoftware/sas-auth-browser"
+    ]
 }

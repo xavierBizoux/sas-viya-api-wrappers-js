@@ -15,7 +15,7 @@ export default class ComputeSession {
         this.context = null
         this.sasInstance = new CookieAuthenticationCredential({ url: server })
     }
-    private getComputeContext = async () => {
+    private readonly getComputeContext = async () => {
         const link: Link = {
             method: 'GET',
             rel: 'self',
@@ -29,21 +29,19 @@ export default class ComputeSession {
             link: link,
         })
         if (response) {
-            const [context] = response.items.filter((element) =>
-                element.name?.includes(this.contextName) ? element : null
+            const context = response.items.find((element) =>
+                element.name?.includes(this.contextName)
             )
-            this.context = context
+            this.context = context as Item
         } else {
             throw new Error('Context not found')
         }
     }
-    private createSession = async () => {
+    private readonly createSession = async () => {
         if (this.context === null) {
             await this.getComputeContext()
         }
-        const [link] = this.context!.links.filter((element) =>
-            element.rel === 'createSession' ? element : null
-        )
+        const link = this.context!.links.find((element) => element.rel === 'createSession') as Link
         this.session = await callViyaApi({
             server: this.server,
             sasInstance: this.sasInstance,
@@ -52,10 +50,15 @@ export default class ComputeSession {
     }
     deleteSession = async () => {
         if (this.session !== null) {
-            const [link] = this.session.links.filter((element) =>
-                element.rel === 'delete' ? element : null
-            )
-            await callViyaApi({ server: this.server, sasInstance: this.sasInstance, link: link })
+            const link = this.session.links.find((element) => element.rel === 'delete') as Link
+            const apiParams = { method: link.method } as ApiParameters
+            await callViyaApi({
+                server: this.server,
+                sasInstance: this.sasInstance,
+                link: link,
+                options: apiParams,
+            })
+            this.session = null
         }
     }
     getLibraries = async (outputType: OutputType = 'data') => {

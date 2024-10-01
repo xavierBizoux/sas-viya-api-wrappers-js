@@ -9,11 +9,13 @@
     </head>
     <body>
         <div id="app"></div>
-        <script
-            type="module"
-            src="/src/ComputeSession.ts"></script>
+        <button
+            type="submit"
+            id="closeSession">
+            Close Session
+        </button>
         <script type="module">
-            import ComputeSession from './src/ComputeSession'
+            import { ComputeSession } from './src/main.ts'
 
             const computeSession = new ComputeSession(
                 'https://server.demo.sas.com',
@@ -85,6 +87,9 @@
             div.appendChild(selectColumn)
             div.appendChild(selectValue)
             App?.appendChild(div)
+            document.getElementById('closeSession').onclick = () => {
+                computeSession.deleteSession()
+            }
         </script>
     </body>
 </html>

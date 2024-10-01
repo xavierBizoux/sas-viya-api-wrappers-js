@@ -6,9 +6,33 @@ Currently, the package contains wrapper for:
 
 -   SAS Compute Server
 
-The [sas-auth-browser](https://github.com/sassoftware/sas-viya-sdk-js/blob/main/sdk/sas-auth-browser/README.md) package provided by SAS. This packages requires specific configuration of the SAS Viya environment. Please refer to the [documentation](https://developers.sas.com/sdk/va/docs/latest/getting-started#sas-viya-setup) for more information.
+## Prerequisite
 
-## SAS Compute Server
+The [sas-auth-browser](https://github.com/sassoftware/sas-viya-sdk-js/blob/main/sdk/sas-auth-browser/README.md) package provided by SAS.
+
+In order to successfully make browser based REST calls to SAS Viya endpoints using cookies, you will need to enable CORS, Cross-site cookies and CSRF web security settings. For more information, see the SAS® Visual Analytics SDK SAS Viya [setup guide](https://developer.sas.com/sdk/va/docs/guides/viya-setup/).
+
+## Installation
+
+```bash
+npm i sas-viya-api-wrappers-js
+```
+
+## CDN
+
+```html
+<script type="importmap">
+    {
+        "imports": {
+            "sas-viya-api-wrappers-js": "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js@latest/dist/sas-viya-api-wrappers-js.js"
+        }
+    }
+</script>
+```
+
+## Usage
+
+### SAS Compute Server API
 
 This wrapper is created as a class. The class can be instantiated using the following code:
 
@@ -46,5 +70,3 @@ The class exposes the following functions:
     code: string[]
     )
 -   deleteSession()
-
-## For more information about the usage, please refer to the following article(s):

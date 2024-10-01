@@ -1,3 +1,4 @@
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
@@ -12,12 +13,14 @@ export default defineConfig({
         ],
     },
     plugins: [
+        basicSsl(),
         dts({
             insertTypesEntry: true,
         }),
     ],
     server: {
         port: 3000,
+        https: true,
     },
     build: {
         manifest: true,
@@ -27,14 +30,6 @@ export default defineConfig({
             entry: [resolve(__dirname, 'src/main.ts')],
             name: 'sas-viya-api-wrappers-js',
             fileName: 'sas-viya-api-wrappers-js',
-        },
-        rollupOptions: {
-            external: ['@sassoftware/sas-auth-browser'],
-            output: {
-                globals: {
-                    '@sassoftware/sas-auth-browser': 'SASAuth',
-                },
-            },
         },
     },
     preview: {
