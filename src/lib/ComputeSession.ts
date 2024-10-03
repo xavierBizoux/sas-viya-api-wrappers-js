@@ -8,13 +8,18 @@ export default class ComputeSession {
     context: Item | null
     server: string
     sasInstance: CookieAuthenticationCredential
-    constructor(server: string, contextName: string = 'SAS Job Execution compute context') {
+    constructor(
+        server: string,
+        contextName: string = 'SAS Job Execution compute context',
+        sasInstance?: CookieAuthenticationCredential
+    ) {
         this.server = server
         this.contextName = contextName
         this.session = null
         this.context = null
-        this.sasInstance = new CookieAuthenticationCredential({ url: server })
+        this.sasInstance = sasInstance || new CookieAuthenticationCredential({ url: server })
     }
+
     private readonly getComputeContext = async () => {
         const link: Link = {
             method: 'GET',
@@ -22,7 +27,6 @@ export default class ComputeSession {
             href: '/compute/contexts',
             type: 'application/vnd.sas.collection',
         }
-
         const response = await callViyaApi({
             server: this.server,
             sasInstance: this.sasInstance,
@@ -48,6 +52,11 @@ export default class ComputeSession {
             link: link,
         })
     }
+    logout = async () => {
+        this.deleteSession()
+        await this.sasInstance.logout()
+        this.sasInstance.invalidateCache()
+    }
     deleteSession = async () => {
         if (this.session !== null) {
             const link = this.session.links.find((element) => element.rel === 'delete') as Link
@@ -61,6 +70,29 @@ export default class ComputeSession {
             this.session = null
         }
     }
+
+    getComputeContexts = async () => {
+        if (this.session === null) {
+            await this.createSession()
+        }
+        const link: Link = {
+            method: 'GET',
+            rel: 'self',
+            href: '/compute/contexts',
+            type: 'application/vnd.sas.collection',
+        }
+        const response = await callViyaApi({
+            server: this.server,
+            sasInstance: this.sasInstance,
+            link: link,
+        })
+        if (response) {
+            return response?.items.map((element) => element.name) ?? []
+        } else {
+            throw new Error('No context found')
+        }
+    }
+
     getLibraries = async (outputType: OutputType = 'data') => {
         if (this.session === null) {
             await this.createSession()
@@ -159,6 +191,9 @@ export default class ComputeSession {
         columnName: string,
         filters?: { column: string; value: string }[]
     ) => {
+        if (this.session === null) {
+            await this.createSession()
+        }
         const columns = (await this.getColumns(libraryName, tableName, 'api')) as Item[]
         const column = columns.find((element) => element.name === columnName)
         if (column === undefined) {

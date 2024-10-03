@@ -17,12 +17,6 @@
         <script type="module">
             import { ComputeSession } from './src/main.ts'
 
-            const computeSession = new ComputeSession(
-                'https://server.demo.sas.com',
-                'SAS Job Execution compute context'
-            )
-            const libraries = await computeSession.getLibraries()
-
             const populateDropdown = (dropdown, options) => {
                 const topElement = document.createElement('option')
                 topElement.text = '-- Select --'
@@ -38,12 +32,37 @@
                 dropdown.disabled = false
             }
 
+            const computeSession = new ComputeSession('https://server.demo.sas.com')
+            // const libraries = await computeSession.getLibraries()
+
             const App = document.getElementById('app')
             const div = document.createElement('div')
-            const selectLibrary = document.createElement('select')
-            if (libraries) {
-                populateDropdown(selectLibrary, libraries)
+
+            const selectContext = document.createElement('select')
+            const contexts = await computeSession.getComputeContexts()
+            if (contexts) {
+                populateDropdown(selectContext, contexts)
             }
+            selectContext.onchange = async () => {
+                computeSession.deleteSession()
+                selectLibrary.replaceChildren()
+                selectLibrary.disabled = true
+                selectTable.replaceChildren()
+                selectTable.disabled = true
+                selectColumn.replaceChildren()
+                selectColumn.disabled = true
+                selectValue.replaceChildren()
+                selectValue.disabled = true
+                const data = await computeSession.getLibraries()
+                if (data) {
+                    populateDropdown(selectLibrary, data)
+                }
+            }
+
+            const selectLibrary = document.createElement('select')
+            // if (libraries) {
+            //     populateDropdown(selectLibrary, libraries)
+            // }
             selectLibrary.onchange = async () => {
                 selectTable.replaceChildren()
                 selectTable.disabled = true
@@ -82,13 +101,14 @@
             }
             const selectValue = document.createElement('select')
 
+            div.appendChild(selectContext)
             div.appendChild(selectLibrary)
             div.appendChild(selectTable)
             div.appendChild(selectColumn)
             div.appendChild(selectValue)
             App?.appendChild(div)
             document.getElementById('closeSession').onclick = () => {
-                computeSession.deleteSession()
+                computeSession.logout()
             }
         </script>
     </body>

@@ -1,5 +1,4 @@
 import { ApiParameters, ApiResponse, CallViyaApiParameters, Link } from './callViyaApi.types'
-
 // Variable to store the CSRF Token that is required for POST requests
 let csrfToken: string | null = null
 // Default limit for API calls
@@ -83,7 +82,10 @@ export const callViyaApi = async ({
     const requestOptions = generateRequestInit(link, headers, options)
     // Call REST API
     try {
-        const response = await fetch(url, requestOptions)
+        let response = await fetch(url, requestOptions)
+        if (response.status === 449) {
+            response = await fetch(url, requestOptions)
+        }
         if (response.ok) {
             // Store CSRF token if present for later usage
             if (response.headers.get('x-csrf-token')) {

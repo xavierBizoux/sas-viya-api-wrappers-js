@@ -48,6 +48,7 @@ The second parameters corresponds to the server context you want to access.
 
 The class exposes the following functions:
 
+-   getComputeContexts()
 -   getLibraries(
     outputType: OutputType = 'data'
     )
@@ -70,3 +71,4 @@ The class exposes the following functions:
     code: string[]
     )
 -   deleteSession()
+-   logout()
