@@ -60,9 +60,6 @@
             }
 
             const selectLibrary = document.createElement('select')
-            // if (libraries) {
-            //     populateDropdown(selectLibrary, libraries)
-            // }
             selectLibrary.onchange = async () => {
                 selectTable.replaceChildren()
                 selectTable.disabled = true
