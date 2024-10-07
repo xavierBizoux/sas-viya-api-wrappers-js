@@ -35,20 +35,14 @@ export type Item = {
     version: number
 }
 
-export type ApiParameters = {
-    data?: string
-    start?: number
-    limit?: number
-    filter?: string
-    includeColumns?: string
-    headers?: Headers
-}
-
-export type CallViyaApiParameters = {
-    server: string
-    sasInstance: CookieAuthenticationCredential
-    link: Link
-    options?: ApiParameters
-}
-
 export type OutputType = 'data' | 'api'
+
+export type APICallProps = {
+    server: string
+    link: Link
+    sasInstance: CookieAuthenticationCredential
+    headers?: Headers
+    data?: string
+    urlSearchParams?: URLSearchParams
+    CSRFToken?: string
+}

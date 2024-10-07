@@ -32,6 +32,32 @@ npm i sas-viya-api-wrappers-js
 
 ## Usage
 
+### API Calls
+
+This wrapper is created as a class. The cal can be instantiated using the following code:
+
+```js
+const api = new APICall({
+    server: this.server,
+    link: link,
+    sasInstance: this.sasInstance,
+    ...
+})
+```
+
+The following parameters can be used to instantiate the class:
+@param {APICallProps} options - Options to construct the APICall object.
+@param {string} options.server - The SAS Viya server.
+@param {Link} options.link - A link object that contains the method, rel, and other required information.
+@param {CookieAuthenticationCredential} [options.sasInstance] - The authentication instance to use.
+@param {Headers} [options.headers] - The headers to include in the request.
+@param {string} [options.data] - The data to include in the request body.
+@param {URLSearchParams} [options.urlSearchParams] - The URL search parameters to include in the request.
+
+The class exposes the following methods:
+
+-   execute()
+
 ### SAS Compute Server API
 
 This wrapper is created as a class. The class can be instantiated using the following code:
@@ -43,10 +69,12 @@ const computeSession = new ComputeSession(
 )
 ```
 
-The first parameter is the SAS Viya server name.
-The second parameters corresponds to the server context you want to access.
+The following parameters can be used to instantiate the class:
+@param {string} server The URL of the SAS Viya server.
+@param {string} [contextName='SAS Job Execution compute context'] The name of the context to use.
+@param {CookieAuthenticationCredential} [sasInstance] The authentication instance to use.
 
-The class exposes the following functions:
+The class exposes the following methods:
 
 -   getComputeContexts()
 -   getLibraries(
