@@ -1,6 +1,6 @@
 import { CookieAuthenticationCredential } from '@sassoftware/sas-auth-browser'
-import { callViyaApi } from './callViyaApi'
-import { ApiParameters, ApiResponse, Item, Link, OutputType } from './callViyaApi.types'
+import APICall from './ApiCalls'
+import { ApiResponse, Item, Link, OutputType } from './ApiCalls.types'
 
 export default class ComputeSession {
     contextName: string
@@ -8,6 +8,15 @@ export default class ComputeSession {
     context: Item | null
     server: string
     sasInstance: CookieAuthenticationCredential
+
+    /**
+     * ComputeSession class
+     * @class ComputeSession
+     * @classdesc This class provides an interface to the SAS Viya Compute API.
+     * @param {string} server The URL of the SAS Viya server.
+     * @param {string} [contextName='SAS Job Execution compute context'] The name of the context to use.
+     * @param {CookieAuthenticationCredential} [sasInstance] The authentication instance to use.
+     */
     constructor(
         server: string,
         contextName: string = 'SAS Job Execution compute context',
@@ -27,46 +36,50 @@ export default class ComputeSession {
             href: '/compute/contexts',
             type: 'application/vnd.sas.collection',
         }
-        const response = await callViyaApi({
+        const api = new APICall({
             server: this.server,
-            sasInstance: this.sasInstance,
             link: link,
+            sasInstance: this.sasInstance,
         })
+        const response = await api.execute()
         if (response) {
-            const context = response.items.find((element) =>
+            const context = response.items.find((element: Item) =>
                 element.name?.includes(this.contextName)
             )
             this.context = context as Item
         } else {
-            throw new Error('Context not found')
+            throw new Error(`Context ${this.contextName} not found`)
         }
     }
+
     private readonly createSession = async () => {
         if (this.context === null) {
             await this.getComputeContext()
         }
         const link = this.context!.links.find((element) => element.rel === 'createSession') as Link
-        this.session = await callViyaApi({
+        const api = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: link,
         })
+        this.session = await api.execute()
     }
+
     logout = async () => {
         this.deleteSession()
         await this.sasInstance.logout()
         this.sasInstance.invalidateCache()
     }
+
     deleteSession = async () => {
         if (this.session !== null) {
             const link = this.session.links.find((element) => element.rel === 'delete') as Link
-            const apiParams = { method: link.method } as ApiParameters
-            await callViyaApi({
+            const api = new APICall({
                 server: this.server,
                 sasInstance: this.sasInstance,
                 link: link,
-                options: apiParams,
             })
+            await api.execute()
             this.session = null
         }
     }
@@ -81,13 +94,14 @@ export default class ComputeSession {
             href: '/compute/contexts',
             type: 'application/vnd.sas.collection',
         }
-        const response = await callViyaApi({
+        const api = new APICall({
             server: this.server,
-            sasInstance: this.sasInstance,
             link: link,
+            sasInstance: this.sasInstance,
         })
+        const response = await api.execute()
         if (response) {
-            return response?.items.map((element) => element.name) ?? []
+            return response?.items.map((element: Item) => element.name) ?? []
         } else {
             throw new Error('No context found')
         }
@@ -101,14 +115,14 @@ export default class ComputeSession {
         if (link === undefined) {
             throw new Error('No libraries found')
         }
-
-        const response = await callViyaApi({
+        const api = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: link,
         })
+        const response = await api.execute()
         if (outputType === 'data') {
-            return response?.items.map((element) => element.name) ?? []
+            return response?.items.map((element: Item) => element.name) ?? []
         } else {
             return response?.items
         }
@@ -126,26 +140,27 @@ export default class ComputeSession {
         if (library === undefined) {
             throw new Error(`Library ${libraryName} not found`)
         }
-        const libraryInfo = await callViyaApi({
+        const libraryApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: library.links[0],
         })
-        const link = libraryInfo!.links.find((element) => element.rel === 'tables')
+        const libraryInfo = await libraryApi.execute()
+        const link = libraryInfo!.links.find((element: Link) => element.rel === 'tables')
         if (link === undefined) {
-            throw new Error('No tables found in library')
+            throw new Error(`No tables found in library ${libraryName}`)
         }
         const headers = new Headers()
         headers.set('Accept', 'application/vnd.sas.collection+json')
-        const apiParams = { headers: headers } as ApiParameters
-        const response = await callViyaApi({
+        const api = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: link,
-            options: apiParams,
+            headers: headers,
         })
+        const response = await api.execute()
         if (outputType === 'data') {
-            return response?.items.map((element) => element.name) ?? []
+            return response?.items.map((element: Item) => element.name) ?? []
         } else {
             return response?.items
         }
@@ -164,22 +179,24 @@ export default class ComputeSession {
         if (table === undefined) {
             throw new Error(`Table ${tableName} not found in library ${libraryName}`)
         }
-        const tableInfo = await callViyaApi({
+        const tableApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: table.links[0],
         })
-        const link = tableInfo!.links.find((element) => element.rel === 'columns')
+        const tableInfo = await tableApi.execute()
+        const link = tableInfo!.links.find((element: Link) => element.rel === 'columns')
         if (link === undefined) {
-            throw new Error('No columns found in table')
+            throw new Error(`No columns found in table ${libraryName}.${tableName}`)
         }
-        const response = await callViyaApi({
+        const api = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: link,
         })
+        const response = await api.execute()
         if (outputType === 'data') {
-            return response?.items.map((element) => element.name) ?? []
+            return response?.items.map((element: Item) => element.name) ?? []
         } else {
             return response?.items ?? []
         }
@@ -226,43 +243,43 @@ export default class ComputeSession {
         }
         const headers = new Headers()
         headers.set('Accept', 'application/vnd.sas.compute.job+json')
-        const apiParams = {
-            headers: headers,
-            data: JSON.stringify({ code: code }),
-        } as ApiParameters
-        const response = await callViyaApi({
+        const api = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: link,
-            options: apiParams,
+            headers: headers,
+            data: JSON.stringify({ code: code }),
         })
-        const results = response!.links.find((element) => element.rel === 'results')
+        const response = await api.execute()
+        const results = response!.links.find((element: Link) => element.rel === 'results')
         if (results === undefined) {
             throw new Error('No results found')
         }
-        const resultsInfo = await callViyaApi({
+        const resultsApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: results,
         })
-        const result = resultsInfo!.items.find((element) => element.id === 'json')
+        const resultsInfo = await resultsApi.execute()
+        const result = resultsInfo!.items.find((element: Item) => element.id === 'json')
         if (result === undefined) {
             throw new Error('No result found')
         }
-        const resultInfo = await callViyaApi({
+        const resultApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: result.links[0],
         })
-        const content = resultInfo!.links.find((element) => element.rel === 'content')
+        const resultInfo = await resultApi.execute()
+        const content = resultInfo!.links.find((element: Link) => element.rel === 'content')
         if (content === undefined) {
             throw new Error('No content found')
         }
-        const data = await callViyaApi({
+        const contentApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: content,
         })
-        return data
+        return await contentApi.execute()
     }
 }
