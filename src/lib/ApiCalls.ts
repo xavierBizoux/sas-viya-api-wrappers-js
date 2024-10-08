@@ -86,7 +86,7 @@ export default class APICall {
 
     private readonly getCSRFToken = async () => {
         const url = `${this.server}${this.link.href}`
-        const response = await fetch(url, { method: 'OPTIONS', credentials: 'include' })
+        const response = await fetch(url, { method: 'HEAD', credentials: 'include' })
         if (response.headers.get('x-csrf-token')) {
             this.CSRFToken = response.headers.get('x-csrf-token')
         }
