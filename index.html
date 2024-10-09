@@ -95,7 +95,18 @@
                 }
             }
             const selectValue = document.createElement('select')
-
+            selectValue.onchange = async () => {
+                const data = await computeSession.getValues(
+                    selectLibrary.value,
+                    selectTable.value,
+                    selectColumn.value,
+                    [
+                        { column: 'origin', value: 'Asia' },
+                        { column: 'origin', value: 'Europe' },
+                        { column: 'type', value: 'SUV' },
+                    ]
+                )
+            }
             div.appendChild(selectContext)
             div.appendChild(selectLibrary)
             div.appendChild(selectTable)

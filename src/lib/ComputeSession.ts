@@ -218,8 +218,18 @@ export default class ComputeSession {
         }
         let sql = `proc sql; create view promptValues as select distinct ${columnName} from ${libraryName}.${tableName};quit;`
         if (filters) {
-            const whereClause = filters
-                .map((elements) => `${elements.column} = '${elements.value}'`)
+            const filterData: { [key: string]: string[] } = {}
+            filters.forEach((element) => {
+                if (filterData[element.column] === undefined) {
+                    filterData[element.column] = []
+                }
+                filterData[element.column].push(element.value)
+            })
+            const whereClause = Object.keys(filterData)
+                .map((key) => {
+                    const values = filterData[key].map((element) => `'${element}'`)
+                    return `${key} in (${values.join(', ')})`
+                })
                 .join(' and ')
             sql = `proc sql; create view promptValues as select distinct ${columnName} from ${libraryName}.${tableName} where ${whereClause};quit;`
         }
