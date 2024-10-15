@@ -47,13 +47,13 @@ const api = new APICall({
 
 The following parameters can be used to instantiate the class:
 
-- @param {APICallProps} options - Options to construct the APICall object.
-- @param {string} options.server - The SAS Viya server.
-- @param {Link} options.link - A link object that contains the method, rel, and other required information.
-- @param {CookieAuthenticationCredential} [options.sasInstance] - The authentication instance to use.
-- @param {Headers} [options.headers] - The headers to include in the request.
-- @param {string} [options.data] - The data to include in the request body.
-- @param {URLSearchParams} [options.urlSearchParams] - The URL search parameters to include in the request.
+-   @param {APICallProps} options - Options to construct the APICall object.
+-   @param {string} options.server - The SAS Viya server.
+-   @param {Link} options.link - A link object that contains the method, rel, and other required information.
+-   @param {CookieAuthenticationCredential} [options.sasInstance] - The authentication instance to use.
+-   @param {Headers} [options.headers] - The headers to include in the request.
+-   @param {string} [options.data] - The data to include in the request body.
+-   @param {URLSearchParams} [options.urlSearchParams] - The URL search parameters to include in the request.
 
 The class exposes the following methods:
 
@@ -71,9 +71,10 @@ const computeSession = new ComputeSession(
 ```
 
 The following parameters can be used to instantiate the class:
-- @param {string} server The URL of the SAS Viya server.
-- @param {string} [contextName='SAS Job Execution compute context'] The name of the context to use.
-- @param {CookieAuthenticationCredential} [sasInstance] The authentication instance to use.
+
+-   @param {string} server The URL of the SAS Viya server.
+-   @param {string} [contextName='SAS Job Execution compute context'] The name of the context to use.
+-   @param {CookieAuthenticationCredential} [sasInstance] The authentication instance to use.
 
 The class exposes the following methods:
 
@@ -101,3 +102,12 @@ The class exposes the following methods:
     )
 -   deleteSession()
 -   logout()
+
+## Samples
+
+In this section, you can find examples of web applications and their related code.
+
+### SAS Compute Server API
+
+-   [samples/js-job-simple](samples/js-job-simple): demonstrate how to create a simple prompt for a SAS Viya Job
+-   [samples/js-job-simple](samples/js-job-avanced): demonstrate how to create a customized prompt for a SAS Viya Job

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0" />
+        <title>SAS Viya APi Wrappers for JS</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous" />
+        <script
+            type="importmap"
+            crossorigin="anonymous">
+            {
+                "imports": {
+                    "sas-wrappers": "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js"
+                }
+            }
+        </script>
+        <style>
+            iframe {
+                width: 90dvw;
+                height: 60dvh;
+            }
+        </style>
+    </head>
+    <body class="container-fluid">
+        <form
+            id="form"
+            action="https://server.demo.sas.Com/SASJobExecution/"
+            class="form justify-content-center w-50 mt-3 mx-auto">
+            <h1 class="text-center w-100 bg-primary text-white rounded-top my-2 mx-auto">
+                Demo - SAS Viya API Wrappers for JS
+            </h1>
+            <input
+                type="hidden"
+                name="_program"
+                value="/Users/student/My Folder/Advanced JavaScript" />
+            <input
+                type="hidden"
+                name="_action"
+                value="execute" />
+            <input
+                type="hidden"
+                name="_action"
+                value="wait" />
+            <div class="row w-100 my-2 mx-auto">
+                <label
+                    for="regionSelect"
+                    class="col-2 col-form-label"
+                    >Select a region:</label
+                >
+                <div class="col">
+                    <select
+                        class="form-select col"
+                        id="regionSelect"
+                        name="regionSelect"
+                        disabled></select>
+                </div>
+            </div>
+            <div class="row w-100 my-2 mx-auto">
+                <fieldset class="col-4">
+                    <legend class="col-form-label">Select car types:</legend>
+                    <div
+                        id="typesCheckboxes"
+                        name="typesCheckboxes"
+                        class="col"></div>
+                </fieldset>
+
+                <fieldset class="col-4">
+                    <legend class="col-form-label">Select drivetrain:</legend>
+                    <div
+                        id="drivetrainCheckboxes"
+                        name="drivetrainCheckboxes"
+                        class="col"></div>
+                </fieldset>
+                <div class="col-4">
+                    <fieldset class="row w-100">
+                        <div>
+                            <label
+                                for="priceMax"
+                                class="form-label"
+                                >Maximum price:</label
+                            >
+                            <span id="priceMaxValue"></span>
+                        </div>
+                        <input
+                            type="range"
+                            class="form-range"
+                            disabled
+                            id="priceMax"
+                            name="priceMax" />
+                    </fieldset>
+                    <fieldset class="row w-100">
+                        <div>
+                            <label
+                                for="horsepowerMax"
+                                class="form-label"
+                                >Maximum horsepower:</label
+                            >
+                            <span id="horsepowerMaxValue"></span>
+                        </div>
+                        <input
+                            type="range"
+                            class="form-range"
+                            disabled
+                            id="horsepowerMax"
+                            name="horsepowerMax" />
+                    </fieldset>
+                </div>
+            </div>
+            <div class="row w-100 my-2 mx-auto">
+                <input
+                    id="submitButton"
+                    type="submit"
+                    class="btn btn-primary w-100"
+                    disabled
+                    value="Submit" />
+            </div>
+        </form>
+        <div class="flex row justify-center items-center w-full">
+            <iframe id="JobResults"></iframe>
+        </div>
+        <div
+            id="loader"
+            class="modal min-vw-50 min-vh-30"
+            tabindex="-1">
+            <div class="modal-dialog text-center">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div
+                            class="spinner-border text-primary"
+                            role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="module">
+            import * as sasWrappers from 'sas-wrappers'
+            const computeSession = new sasWrappers.ComputeSession(
+                'https://server.demo.sas.com',
+                'SAS Job Execution compute context'
+            )
+            const validFields = []
+            const populateDropdown = (target, options) => {
+                const dropdown = document.getElementById(target)
+                dropdown.replaceChildren()
+                const topElement = document.createElement('option')
+                topElement.text = '-- Select --'
+                topElement.disabled = true
+                topElement.selected = true
+                dropdown.appendChild(topElement)
+                options.forEach((option) => {
+                    const optionElement = document.createElement('option')
+                    optionElement.value = option
+                    optionElement.text = option
+                    dropdown.appendChild(optionElement)
+                })
+                dropdown.disabled = false
+            }
+
+            const populateCheckboxes = (target, data, formElementName) => {
+                const fieldset = document.getElementById(target)
+                fieldset.replaceChildren()
+                data.forEach((option) => {
+                    const div = document.createElement('div')
+                    div.classList.add('form-check')
+                    const checkbox = document.createElement('input')
+                    checkbox.classList.add('form-check-input')
+                    checkbox.type = 'checkbox'
+                    checkbox.value = option
+                    checkbox.name = formElementName
+                    const label = document.createElement('label')
+                    label.classList.add('form-check-label')
+                    label.htmlFor = option
+                    label.innerText = option
+                    div.appendChild(checkbox)
+                    div.appendChild(label)
+                    fieldset.appendChild(div)
+                })
+            }
+
+            const populateRanges = async (target, variable, step = 10) => {
+                const slider = document.getElementById(target)
+                const code = [
+                    `proc sql; create view range as select min(${variable}) as minimum, max(${variable}) as maximum from SASHELP.CARS where origin = "${regionSelect.value}";quit;`,
+                    'filename json temp;',
+                    'proc json out=json pretty nokeys nosastags; export range ; run;',
+                ]
+                const range = await computeSession.executeCode(code)
+                slider.min = Math.floor(range[0][0] / step) * step
+                slider.max = Math.ceil(range[0][1] / step) * step
+                slider.value = slider.max
+                slider.step = step
+            }
+
+            const enableSubmit = () => {
+                const submit = document.getElementById('submit')
+                if (
+                    validFields.includes('regionSelect') &&
+                    validFields.includes('typesCheckboxes')
+                ) {
+                    document.getElementById('submitButton').disabled = false
+                } else {
+                    document.getElementById('submitButton').disabled = true
+                }
+            }
+
+            const form = document.getElementById('form')
+            const regionSelect = document.getElementById('regionSelect')
+            const typesCheckboxes = document.getElementById('typesCheckboxes')
+            const priceMax = document.getElementById('priceMax')
+            const horsepowerMax = document.getElementById('horsepowerMax')
+            const loader = new bootstrap.Modal(document.getElementById('loader'), {
+                keyboard: false,
+                backdrop: 'static',
+            })
+            loader.show()
+            const regions = await computeSession.getValues('SASHELP', 'CARS', 'Origin')
+            if (regions) {
+                populateDropdown('regionSelect', regions)
+                loader.hide()
+            }
+
+            regionSelect.addEventListener('change', async () => {
+                loader.show()
+                const types = await computeSession.getValues('SASHELP', 'CARS', 'Type', [
+                    { column: 'origin', value: regionSelect.value },
+                ])
+                if (types) {
+                    populateCheckboxes('typesCheckboxes', types, 'types')
+                }
+                await populateRanges('priceMax', 'MSRP', 50)
+                priceMax.disabled = false
+                document.getElementById('priceMaxValue').innerText = priceMax.value
+                await populateRanges('horsepowerMax', 'horsepower', 5)
+                document.getElementById('horsepowerMaxValue').innerText = horsepowerMax.value
+                horsepowerMax.disabled = false
+                if (regionSelect.value) {
+                    validFields.push('regionSelect')
+                } else {
+                    validFields.splice(validFields.indexOf('regionSelect'), 1)
+                }
+                loader.hide()
+                enableSubmit()
+            })
+
+            typesCheckboxes.addEventListener('change', async () => {
+                loader.show()
+                const filter = [{ column: 'origin', value: regionSelect.value }]
+                typesCheckboxes.querySelectorAll('input').forEach((checkbox) => {
+                    if (checkbox.checked) {
+                        filter.push({ column: 'type', value: checkbox.value })
+                    }
+                })
+                const drivetrains = await computeSession.getValues(
+                    'SASHELP',
+                    'CARS',
+                    'DriveTrain',
+                    filter
+                )
+                if (drivetrains) {
+                    populateCheckboxes('drivetrainCheckboxes', drivetrains, 'drivetrains')
+                }
+                if (
+                    document
+                        .getElementById('typesCheckboxes')
+                        .querySelectorAll('input[type="checkbox"]:checked').length > 1
+                ) {
+                    validFields.push('typesCheckboxes')
+                } else if (validFields.indexOf('typesCheckboxes') > -1) {
+                    validFields.splice(validFields.indexOf('typesCheckboxes'), 1)
+                }
+                loader.hide()
+                enableSubmit()
+            })
+
+            priceMax.addEventListener('change', (event) => {
+                document.getElementById('priceMaxValue').innerText = event.target.value
+            })
+
+            horsepowerMax.addEventListener('change', (event) => {
+                document.getElementById('horsepowerMaxValue').innerText = event.target.value
+            })
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault()
+                const formData = new FormData(form)
+                const urlParams = new URLSearchParams(formData).toString()
+                const url = `${computeSession.server}/SASJobExecution/?${urlParams}`
+                document.getElementById('JobResults').setAttribute('src', url)
+            })
+        </script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+    </body>
+</html>
