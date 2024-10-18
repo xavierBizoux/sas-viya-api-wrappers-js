@@ -1,34 +1,21 @@
 import { CookieAuthenticationCredential } from '@sassoftware/sas-auth-browser'
-import { APICallProps, Link } from './ApiCalls.types'
+import { APICallProps, ApiResponse, Link } from './ApiCalls.types'
 
 const DEFAULT_LIMIT = 100
 
 export default class APICall {
-    sasInstance: CookieAuthenticationCredential
-    server: string
-    link: Link
-    headers!: Headers
-    urlSearchParams!: URLSearchParams
-    requestInit: RequestInit
-    CSRFToken!: string | null
+    private sasInstance: CookieAuthenticationCredential
+    private server: string
+    private link: Link
+    private headers: Headers
+    private urlSearchParams: URLSearchParams
+    private requestInit: RequestInit
+    private CSRFToken: string | null = null
 
-    /**
-     * Construct an APICall object.
-     *
-     * @param {APICallProps} options - Options to construct the APICall object.
-     * @param {string} options.server - The SAS Viya server.
-     * @param {Link} options.link - A link object that contains the method, rel, and other required information.
-     * @param {CookieAuthenticationCredential} [options.sasInstance] - The authentication instance to use.
-     * @param {Headers} [options.headers] - The headers to include in the request.
-     * @param {string} [options.data] - The data to include in the request body.
-     * @param {URLSearchParams} [options.urlSearchParams] - The URL search parameters to include in the request.
-     */
     constructor({
         server,
         link,
-        sasInstance = new CookieAuthenticationCredential({
-            url: server,
-        }),
+        sasInstance = new CookieAuthenticationCredential({ url: server }),
         headers,
         data,
         urlSearchParams = new URLSearchParams(),
@@ -36,47 +23,53 @@ export default class APICall {
         this.server = server
         this.link = link
         this.sasInstance = sasInstance
-        if (headers) {
-            this.headers = new Headers(headers)
-        } else {
-            this.headers = new Headers()
-        }
 
-        // Set the Content-Type header.
-        if (link.type) {
-            this.headers.set('Content-Type', `${link.type}+json`)
-        } else {
-            this.headers.set('Content-Type', 'application/json')
-        }
+        this.headers = new Headers(headers || {})
+        this.setHeaders(link)
+        this.urlSearchParams = this.initializeUrlSearchParams(urlSearchParams, link.method)
+        this.requestInit = this.createRequestInit(data, link.method)
+    }
 
-        // Set the Accept header.
-        if (link.responseType) {
-            this.headers.set('Accept', `${link.responseType}+json`)
-        } else if (link.method === 'DELETE') {
-            this.headers.set('Accept', 'application/vnd.sas.error+json,application/json')
-        }
+    private setHeaders(link: Link) {
+        const contentType = link.type ? `${link.type}+json` : 'application/json'
+        this.headers.set('Content-Type', contentType)
 
-        // Set URLSearchParams
-        if (!urlSearchParams.has('limit') && link.method === 'GET') {
+        const acceptHeader = link.responseType
+            ? `${link.responseType}+json`
+            : link.method === 'DELETE'
+            ? 'application/vnd.sas.error+json,application/json'
+            : undefined
+
+        if (acceptHeader) {
+            this.headers.set('Accept', acceptHeader)
+        }
+    }
+
+    private initializeUrlSearchParams(
+        urlSearchParams: URLSearchParams,
+        method: string
+    ): URLSearchParams {
+        if (!urlSearchParams.has('limit') && method === 'GET') {
             urlSearchParams.set('limit', DEFAULT_LIMIT.toString())
         } else {
             urlSearchParams.delete('limit')
         }
-        this.urlSearchParams = urlSearchParams
+        return urlSearchParams
+    }
 
-        // Set requestInit
-        this.requestInit = {
-            method: link.method,
+    private createRequestInit(data: string | undefined, method: string): RequestInit {
+        const init: RequestInit = {
+            method,
             credentials: 'include',
         }
         if (data) {
-            this.requestInit.body = data
+            init.body = data
         }
+        return init
     }
 
-    private readonly authenticate = async () => {
+    private async authenticate() {
         try {
-            // Check if user is authenticated
             await this.sasInstance.checkAuthenticated()
         } catch {
             this.sasInstance.invalidateCache()
@@ -84,54 +77,55 @@ export default class APICall {
         }
     }
 
-    private readonly getCSRFToken = async () => {
-        const url = `${this.server}${this.link.href}`
-        const response = await fetch(url, { method: 'HEAD', credentials: 'include' })
-        if (response.headers.get('x-csrf-token')) {
-            this.CSRFToken = response.headers.get('x-csrf-token')
-        }
+    private async getCSRFToken() {
+        const response = await fetch(`${this.server}${this.link.href}`, {
+            method: 'HEAD',
+            credentials: 'include',
+        })
+        this.CSRFToken = response.headers.get('x-csrf-token')
     }
 
-    execute = async () => {
+    public async execute() {
         await this.authenticate()
         await this.getCSRFToken()
         if (this.CSRFToken) {
             this.headers.set('x-csrf-token', this.CSRFToken)
         }
-        let url = `${this.server}${this.link.href}`
-        if (this.urlSearchParams.toString().length > 0) {
-            url += `?${this.urlSearchParams.toString()}`
-        }
+
+        const url = this.buildUrl()
         this.requestInit.headers = this.headers
+
         try {
             let response = await fetch(url, this.requestInit)
             if (response.status === 449) {
                 response = await fetch(url, this.requestInit)
             }
-            if (response.ok) {
-                if (response.headers.get('x-csrf-token')) {
-                    this.CSRFToken = response.headers.get('x-csrf-token')
-                }
-                if (response.status === 204) {
-                    return null
-                }
-                const json = await response.json()
-                // Return the response
-                return json
-            } else {
-                throw new Error(
-                    `Call to ${this.link.href} failed with message: "${response.statusText}"`
-                )
-            }
-        } catch (error: unknown) {
-            if (typeof error === 'string') {
-                console.error(`An error occurred while calling ${this.link.href}: ${error}`)
-            } else if (error instanceof Error) {
-                console.error(
-                    `An error occurred while calling ${this.link.href}: ${error?.message}`
-                )
-            }
-            throw error
+            return (await this.handleResponse(response)) as ApiResponse
+        } catch (error) {
+            this.handleError(error)
         }
+    }
+
+    private buildUrl(): string {
+        const baseUrl = `${this.server}${this.link.href}`
+        return this.urlSearchParams.toString() ? `${baseUrl}?${this.urlSearchParams}` : baseUrl
+    }
+
+    private async handleResponse(response: Response) {
+        if (response.ok) {
+            this.CSRFToken = response.headers.get('x-csrf-token') || this.CSRFToken
+            if (response.status === 204) return null
+            return await response.json()
+        } else {
+            throw new Error(
+                `Call to ${this.link.href} failed with message: "${response.statusText}"`
+            )
+        }
+    }
+
+    private handleError(error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.error(`An error occurred while calling ${this.link.href}: ${errorMessage}`)
+        throw error
     }
 }
