@@ -28,7 +28,29 @@ export default class ComputeSession {
         this.context = null
         this.sasInstance = sasInstance || new CookieAuthenticationCredential({ url: server })
     }
+    private readonly findElement = <T extends Item | Link>(elements: T[], value: string): T => {
+        const element = elements.find(
+            (element: T) =>
+                ('name' in element && element.name === value) ||
+                ('rel' in element && element.rel === value)
+        )
+        if (element === undefined) {
+            throw new Error(`Element ${value} not found`)
+        }
+        return element
+    }
 
+    private readonly generateOutput = (items: Item[], outputType: OutputType) => {
+        if (items.length !== 0) {
+            if (outputType === 'data') {
+                return items.map((element: Item) => element.name) ?? []
+            } else {
+                return items
+            }
+        } else {
+            throw new Error('No items found')
+        }
+    }
     private readonly getComputeContext = async () => {
         const link: Link = {
             method: 'GET',
@@ -41,14 +63,12 @@ export default class ComputeSession {
             link: link,
             sasInstance: this.sasInstance,
         })
-        const response = await api.execute()
+        const response = (await api.execute()) as ApiResponse
         if (response) {
-            const context = response.items.find((element: Item) =>
-                element.name?.includes(this.contextName)
-            )
-            this.context = context as Item
-        } else {
-            throw new Error(`Context ${this.contextName} not found`)
+            this.context = this.findElement(response.items, this.contextName)
+        }
+        if (this.context === null) {
+            throw new Error(`Compute context ${this.contextName} not found`)
         }
     }
 
@@ -56,13 +76,13 @@ export default class ComputeSession {
         if (this.context === null) {
             await this.getComputeContext()
         }
-        const link = this.context!.links.find((element) => element.rel === 'createSession') as Link
+        const link = this.findElement(this.context!.links, 'createSession')
         const api = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: link,
         })
-        this.session = await api.execute()
+        this.session = (await api.execute()) as ApiResponse
     }
 
     logout = async () => {
@@ -73,7 +93,7 @@ export default class ComputeSession {
 
     deleteSession = async () => {
         if (this.session !== null) {
-            const link = this.session.links.find((element) => element.rel === 'delete') as Link
+            const link = this.findElement(this.session.links, 'delete')
             const api = new APICall({
                 server: this.server,
                 sasInstance: this.sasInstance,
@@ -99,11 +119,9 @@ export default class ComputeSession {
             link: link,
             sasInstance: this.sasInstance,
         })
-        const response = await api.execute()
+        const response = (await api.execute()) as ApiResponse
         if (response) {
-            return response?.items.map((element: Item) => element.name) ?? []
-        } else {
-            throw new Error('No context found')
+            return this.generateOutput(response.items, 'data')
         }
     }
 
@@ -111,20 +129,15 @@ export default class ComputeSession {
         if (this.session === null) {
             await this.createSession()
         }
-        const link = this.session!.links.find((element) => element.rel === 'librefs')
-        if (link === undefined) {
-            throw new Error('No libraries found')
-        }
+        const link = this.findElement(this.session!.links, 'librefs')
         const api = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: link,
         })
-        const response = await api.execute()
-        if (outputType === 'data') {
-            return response?.items.map((element: Item) => element.name) ?? []
-        } else {
-            return response?.items
+        const response = (await api.execute()) as ApiResponse
+        if (response) {
+            return this.generateOutput(response.items, outputType)
         }
     }
 
@@ -133,23 +146,14 @@ export default class ComputeSession {
             await this.createSession()
         }
         const libraries = (await this.getLibraries('api')) as Item[]
-        if (libraries.length === 0) {
-            throw new Error('No libraries found')
-        }
-        const library = libraries.find((element) => element.name === libraryName)
-        if (library === undefined) {
-            throw new Error(`Library ${libraryName} not found`)
-        }
+        const library = this.findElement(libraries, libraryName)
         const libraryApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: library.links[0],
         })
         const libraryInfo = await libraryApi.execute()
-        const link = libraryInfo!.links.find((element: Link) => element.rel === 'tables')
-        if (link === undefined) {
-            throw new Error(`No tables found in library ${libraryName}`)
-        }
+        const link = this.findElement(libraryInfo!.links, 'tables')
         const headers = new Headers()
         headers.set('Accept', 'application/vnd.sas.collection+json')
         const api = new APICall({
@@ -159,10 +163,8 @@ export default class ComputeSession {
             headers: headers,
         })
         const response = await api.execute()
-        if (outputType === 'data') {
-            return response?.items.map((element: Item) => element.name) ?? []
-        } else {
-            return response?.items
+        if (response) {
+            return this.generateOutput(response.items, outputType)
         }
     }
 
@@ -175,30 +177,22 @@ export default class ComputeSession {
             await this.createSession()
         }
         const tables = (await this.getTables(libraryName, 'api')) as Item[]
-        const table = tables.find((element) => element.name === tableName)
-        if (table === undefined) {
-            throw new Error(`Table ${tableName} not found in library ${libraryName}`)
-        }
+        const table = this.findElement(tables, tableName)
         const tableApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: table.links[0],
         })
         const tableInfo = await tableApi.execute()
-        const link = tableInfo!.links.find((element: Link) => element.rel === 'columns')
-        if (link === undefined) {
-            throw new Error(`No columns found in table ${libraryName}.${tableName}`)
-        }
+        const link = this.findElement(tableInfo!.links, 'columns')
         const api = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: link,
         })
         const response = await api.execute()
-        if (outputType === 'data') {
-            return response?.items.map((element: Item) => element.name) ?? []
-        } else {
-            return response?.items ?? []
+        if (response) {
+            return this.generateOutput(response.items, outputType)
         }
     }
 
@@ -212,10 +206,7 @@ export default class ComputeSession {
             await this.createSession()
         }
         const columns = (await this.getColumns(libraryName, tableName, 'api')) as Item[]
-        const column = columns.find((element) => element.name === columnName)
-        if (column === undefined) {
-            throw new Error(`Column ${columnName} not found in table ${libraryName}.${tableName}`)
-        }
+        const column = this.findElement(columns, columnName)
         let sql = `proc sql; create view promptValues as select distinct ${columnName} from ${libraryName}.${tableName};quit;`
         if (filters) {
             const filterData: { [key: string]: string[] } = {}
@@ -241,6 +232,7 @@ export default class ComputeSession {
         const data = await this.executeCode(SASCode)
         return data ?? []
     }
+
     executeCode = async (code: string[]) => {
         if (this.session === null) {
             await this.createSession()
@@ -261,30 +253,21 @@ export default class ComputeSession {
             data: JSON.stringify({ code: code }),
         })
         const response = await api.execute()
-        const results = response!.links.find((element: Link) => element.rel === 'results')
-        if (results === undefined) {
-            throw new Error('No results found')
-        }
+        const results = this.findElement(response!.links, 'results')
         const resultsApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: results,
         })
         const resultsInfo = await resultsApi.execute()
-        const result = resultsInfo!.items.find((element: Item) => element.id === 'json')
-        if (result === undefined) {
-            throw new Error('No result found')
-        }
+        const result = this.findElement(resultsInfo!.items, 'json')
         const resultApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
             link: result.links[0],
         })
         const resultInfo = await resultApi.execute()
-        const content = resultInfo!.links.find((element: Link) => element.rel === 'content')
-        if (content === undefined) {
-            throw new Error('No content found')
-        }
+        const content = this.findElement(resultInfo!.links, 'content')
         const contentApi = new APICall({
             server: this.server,
             sasInstance: this.sasInstance,
