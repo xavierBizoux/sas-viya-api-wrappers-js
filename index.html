@@ -5,7 +5,7 @@
         <meta
             name="viewport"
             content="width=device-width, initial-scale=1.0" />
-        <title>viya-apis-js</title>
+        <title>Call API</title>
     </head>
     <body>
         <div id="app"></div>
@@ -32,7 +32,7 @@
                 dropdown.disabled = false
             }
 
-            const computeSession = new ComputeSession('https://server.demo.sas.com')
+            const computeSession = new ComputeSession({ baseURL: 'https://server.demo.sas.com' })
 
             const App = document.getElementById('app')
             const div = document.createElement('div')
@@ -65,7 +65,7 @@
                 selectColumn.disabled = true
                 selectValue.replaceChildren()
                 selectValue.disabled = true
-                const data = await computeSession.getTables(selectLibrary.value)
+                const data = await computeSession.getTables({ libraryName: selectLibrary.value })
                 if (data) {
                     populateDropdown(selectTable, data)
                 }
@@ -76,7 +76,10 @@
                 selectColumn.disabled = true
                 selectValue.replaceChildren()
                 selectValue.disabled = true
-                const data = await computeSession.getColumns(selectLibrary.value, selectTable.value)
+                const data = await computeSession.getColumns({
+                    libraryName: selectLibrary.value,
+                    tableName: selectTable.value,
+                })
                 if (data) {
                     populateDropdown(selectColumn, data)
                 }
@@ -85,27 +88,28 @@
             selectColumn.onchange = async () => {
                 selectValue.replaceChildren()
                 selectValue.disabled = true
-                const data = await computeSession.getValues(
-                    selectLibrary.value,
-                    selectTable.value,
-                    selectColumn.value
-                )
+                const data = await computeSession.getValues({
+                    libraryName: selectLibrary.value,
+                    tableName: selectTable.value,
+                    columnName: selectColumn.value,
+                })
                 if (data) {
                     populateDropdown(selectValue, data)
                 }
             }
             const selectValue = document.createElement('select')
             selectValue.onchange = async () => {
-                const data = await computeSession.getValues(
-                    selectLibrary.value,
-                    selectTable.value,
-                    selectColumn.value,
-                    [
+                const data = await computeSession.getValues({
+                    libraryName: selectLibrary.value,
+                    tableName: selectTable.value,
+                    columnName: selectColumn.value,
+                    filters: [
                         { column: 'origin', value: 'Asia' },
                         { column: 'origin', value: 'Europe' },
                         { column: 'type', value: 'SUV' },
-                    ]
-                )
+                    ],
+                })
+                console.log(data)
             }
             div.appendChild(selectContext)
             div.appendChild(selectLibrary)
@@ -114,7 +118,7 @@
             div.appendChild(selectValue)
             App?.appendChild(div)
             document.getElementById('closeSession').onclick = () => {
-                computeSession.logout()
+                computeSession.deleteSession()
             }
         </script>
     </body>

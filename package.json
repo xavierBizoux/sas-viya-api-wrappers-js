@@ -1,7 +1,7 @@
 {
     "name": "sas-viya-api-wrappers-js",
     "private": false,
-    "version": "1.2.4",
+    "version": "1.2.5",
     "type": "module",
     "license": "Apache-2.0",
     "author": {
@@ -36,9 +36,11 @@
         "vite-plugin-dts": "^4.2.3"
     },
     "dependencies": {
-        "@sassoftware/sas-auth-browser": "^0.2.0"
+        "@sassoftware/sas-auth-browser": "^0.2.0",
+        "axios": "^1.7.7"
     },
     "bundleDependencies": [
-        "@sassoftware/sas-auth-browser"
+        "@sassoftware/sas-auth-browser",
+        "axios"
     ]
 }
