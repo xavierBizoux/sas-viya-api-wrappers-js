@@ -16,10 +16,7 @@
             crossorigin="anonymous">
             {
                 "imports": {
-                    "sas-wrappers": "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js"
-                },
-                "integrity": {
-                    "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js": "sha256-o5E56OSVRTSJlYXb+/M2vL+Dj2Q8o59+WsrVOBKolwU="
+                    "sas-wrappers": "../../dist/sas-viya-api-wrappers-js.js"
                 }
             }
         </script>
@@ -109,10 +106,10 @@
         <script type="module">
             import { ComputeSession } from 'sas-wrappers'
 
-            const computeSession = new ComputeSession(
-                'https://server.demo.sas.com',
-                'SAS Job Execution compute context'
-            )
+            const computeSession = new ComputeSession({
+                baseURL: 'https://server.demo.sas.com',
+                computeContext: 'SAS Job Execution compute context',
+            })
 
             // Remaining code
             const populateDropdown = (target, options) => {
@@ -136,7 +133,7 @@
             const columnSelect = document.getElementById('columnSelect')
             const valueSelect = document.getElementById('valueSelect')
 
-            const libraries = await computeSession.getLibraries()
+            const libraries = await computeSession.getLibraries({})
 
             if (libraries) {
                 populateDropdown('librarySelect', libraries)
@@ -149,7 +146,7 @@
                 columnSelect.disabled = true
                 valueSelect.replaceChildren()
                 valueSelect.disabled = true
-                const data = await computeSession.getTables(librarySelect.value)
+                const data = await computeSession.getTables({ libraryName: librarySelect.value })
                 if (data) {
                     populateDropdown('tableSelect', data)
                 }
@@ -160,7 +157,10 @@
                 columnSelect.disabled = true
                 valueSelect.replaceChildren()
                 valueSelect.disabled = true
-                const data = await computeSession.getColumns(librarySelect.value, tableSelect.value)
+                const data = await computeSession.getColumns({
+                    libraryName: librarySelect.value,
+                    tableName: tableSelect.value,
+                })
                 if (data) {
                     populateDropdown('columnSelect', data)
                 }
@@ -169,11 +169,11 @@
             columnSelect.onchange = async () => {
                 valueSelect.replaceChildren()
                 valueSelect.disabled = true
-                const data = await computeSession.getValues(
-                    librarySelect.value,
-                    tableSelect.value,
-                    columnSelect.value
-                )
+                const data = await computeSession.getValues({
+                    libraryName: librarySelect.value,
+                    tableName: tableSelect.value,
+                    columnName: columnSelect.value,
+                })
                 if (data) {
                     populateDropdown('valueSelect', data)
                 }

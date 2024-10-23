@@ -16,7 +16,7 @@
             crossorigin="anonymous">
             {
                 "imports": {
-                    "sas-wrappers": "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js"
+                    "sas-wrappers": "../../dist/sas-viya-api-wrappers-js.js"
                 }
             }
         </script>
@@ -142,10 +142,10 @@
         </div>
         <script type="module">
             import * as sasWrappers from 'sas-wrappers'
-            const computeSession = new sasWrappers.ComputeSession(
-                'https://server.demo.sas.com',
-                'SAS Job Execution compute context'
-            )
+            const computeSession = new sasWrappers.ComputeSession({
+                baseURL: 'https://server.demo.sas.com',
+                contextName: 'SAS Job Execution compute context',
+            })
             const validFields = []
             const populateDropdown = (target, options) => {
                 const dropdown = document.getElementById(target)
@@ -192,7 +192,7 @@
                     'filename json temp;',
                     'proc json out=json pretty nokeys nosastags; export range ; run;',
                 ]
-                const range = await computeSession.executeCode(code)
+                const range = await computeSession.executeCode({ code: code, resultName: 'json' })
                 slider.min = Math.floor(range[0][0] / step) * step
                 slider.max = Math.ceil(range[0][1] / step) * step
                 slider.value = slider.max
@@ -221,7 +221,11 @@
                 backdrop: 'static',
             })
             loader.show()
-            const regions = await computeSession.getValues('SASHELP', 'CARS', 'Origin')
+            const regions = await computeSession.getValues({
+                libraryName: 'SASHELP',
+                tableName: 'CARS',
+                columnName: 'origin',
+            })
             if (regions) {
                 populateDropdown('regionSelect', regions)
                 loader.hide()
@@ -229,9 +233,12 @@
 
             regionSelect.addEventListener('change', async () => {
                 loader.show()
-                const types = await computeSession.getValues('SASHELP', 'CARS', 'Type', [
-                    { column: 'origin', value: regionSelect.value },
-                ])
+                const types = await computeSession.getValues({
+                    libraryName: 'SASHELP',
+                    tableName: 'CARS',
+                    columnName: 'Type',
+                    filters: [{ column: 'origin', value: regionSelect.value }],
+                })
                 if (types) {
                     populateCheckboxes('typesCheckboxes', types, 'types')
                 }
@@ -258,12 +265,12 @@
                         filter.push({ column: 'type', value: checkbox.value })
                     }
                 })
-                const drivetrains = await computeSession.getValues(
-                    'SASHELP',
-                    'CARS',
-                    'DriveTrain',
-                    filter
-                )
+                const drivetrains = await computeSession.getValues({
+                    libraryName: 'SASHELP',
+                    tableName: 'CARS',
+                    columnName: 'DriveTrain',
+                    filters: filter,
+                })
                 if (drivetrains) {
                     populateCheckboxes('drivetrainCheckboxes', drivetrains, 'drivetrains')
                 }
@@ -292,7 +299,7 @@
                 event.preventDefault()
                 const formData = new FormData(form)
                 const urlParams = new URLSearchParams(formData).toString()
-                const url = `${computeSession.server}/SASJobExecution/?${urlParams}`
+                const url = `${computeSession.baseURL}/SASJobExecution/?${urlParams}`
                 document.getElementById('JobResults').setAttribute('src', url)
             })
         </script>
