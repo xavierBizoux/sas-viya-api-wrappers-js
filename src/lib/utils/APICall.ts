@@ -1,6 +1,6 @@
 import { CookieAuthenticationCredential } from '@sassoftware/sas-auth-browser'
 import axios, { AxiosHeaders, AxiosInstance, AxiosResponse } from 'axios'
-import { APICallProps, Link } from './APICall.types'
+import { APICallProps, Link } from '../types/APICall.types'
 
 const DEFAULT_LIMIT = 100
 const DEFAULT_RETRIES = 3
@@ -60,7 +60,7 @@ export default class APICall {
         })
     }
 
-    private authenticate = async () => {
+    private readonly authenticate = async () => {
         try {
             await this.auth.checkAuthenticated()
         } catch {
@@ -74,7 +74,7 @@ export default class APICall {
         this.auth.invalidateCache()
     }
 
-    private getCSRFToken = async () => {
+    private readonly getCSRFToken = async () => {
         const response = await this.instance.head(this.link.href)
         if (response.status === 405) {
             await this.instance.get(this.link.href)
@@ -84,7 +84,7 @@ export default class APICall {
         }
     }
 
-    private setHeaders = (inputHeaders: Headers) => {
+    private readonly setHeaders = (inputHeaders: Headers) => {
         const headers = new AxiosHeaders()
         if (inputHeaders) {
             for (const [key, value] of inputHeaders.entries()) {
@@ -104,7 +104,7 @@ export default class APICall {
         return headers
     }
 
-    private setQueryParams = () => {
+    private readonly setQueryParams = () => {
         if (!this.searchParams.has('limit') && this.link.method === 'GET') {
             this.searchParams.append('limit', DEFAULT_LIMIT.toString())
         }
@@ -114,7 +114,9 @@ export default class APICall {
     }
 
     execute = async () => {
-        await this.getCSRFToken()
+        if (this.link.method !== 'GET') {
+            await this.getCSRFToken()
+        }
         const response = await this.instance({
             method: this.link.method,
             url: this.link.href,

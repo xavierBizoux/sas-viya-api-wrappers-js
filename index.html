@@ -9,13 +9,31 @@
     </head>
     <body>
         <div id="app"></div>
+        <!-- <iframe
+            style="width: 100vw; height: 100vh"
+            id="output"
+            frameborder="0"></iframe>
+
+        <script type="module">
+            import { Job, getJobDefinition } from './src/main.ts'
+            const job = await getJobDefinition({
+                baseURL: 'https://server.demo.sas.com',
+                name: 'Test Json',
+                path: '/Users/student/My Folder',
+            })
+            const args = { sex: 'M', age: 14, _output_type: 'json' }
+            const output = await job.execute({ args: args, resultFileName: '_webout.json' })
+            console.log(output)
+            document.getElementById('output').srcdoc = output
+        </script> -->
+
         <button
             type="submit"
             id="closeSession">
             Close Session
         </button>
         <script type="module">
-            import { ComputeSession } from './src/main.ts'
+            import { initializeComputeSession, getComputeContexts } from './src/main.ts'
 
             const populateDropdown = (dropdown, options) => {
                 const topElement = document.createElement('option')
@@ -32,13 +50,14 @@
                 dropdown.disabled = false
             }
 
-            const computeSession = new ComputeSession({ baseURL: 'https://server.demo.sas.com' })
-
+            const computeSession = await initializeComputeSession({
+                baseURL: 'https://server.demo.sas.com',
+            })
             const App = document.getElementById('app')
             const div = document.createElement('div')
 
             const selectContext = document.createElement('select')
-            const contexts = await computeSession.getComputeContexts()
+            const contexts = await getComputeContexts({ baseURL: 'https://server.demo.sas.com' })
             if (contexts) {
                 populateDropdown(selectContext, contexts)
             }

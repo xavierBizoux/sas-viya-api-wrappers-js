@@ -103,10 +103,12 @@ The class exposes the following methods:
     }[]
     )
 -   executeCode(
-    code: string[]
+    code: string | string[]
     resultName: string
     )
--   deleteSession()
+-   deleteSession(
+-   logout: boolean
+    )
 
 ## Samples
 

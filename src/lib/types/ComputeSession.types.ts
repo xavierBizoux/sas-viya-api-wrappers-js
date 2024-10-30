@@ -1,4 +1,5 @@
 import { Item } from './APICall.types'
+import { OutputType } from './functions.types'
 
 export type ComputeSession = Item & {
     applicationName: string
@@ -12,10 +13,8 @@ export type ComputeSession = Item & {
 
 export type ComputeSessionProps = {
     baseURL: string
-    contextName?: string
+    info: ComputeSession
 }
-
-export type ComputeContext = Item
 
 export type ComputeServerLibrary = Item & {
     concatenationCount: number
@@ -56,12 +55,7 @@ export type ComputeServerJob = Item & {
     stateElapsedTime: number
 }
 
-export type OutputType = 'data' | 'api'
-
-export type GenerateOutputProps = {
-    items: Item[]
-    outputType?: OutputType
-}
+export type ComputeServerResultFile = Item
 
 export type GetLibrariesProps = {
     outputType?: OutputType
@@ -106,15 +100,25 @@ export type GetValuesProps = {
 }
 
 export type ExecuteCodeProps = {
-    code: string[]
+    code: string | string[]
     resultName: string
+    params?: URLSearchParams
 }
 
-export type CheckJobStateProps = {
+export type CheckComputeJobStateProps = {
     job: ComputeServerJob
 }
 
 export type GetJobResultProps = {
     job: ComputeServerJob
     resultName: string
+}
+
+export type DeleteSessionProps = {
+    logout?: boolean
+}
+
+export type GetComputeSessionProps = {
+    baseURL: string
+    contextName: string
 }
