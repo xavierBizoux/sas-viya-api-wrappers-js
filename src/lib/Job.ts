@@ -1,5 +1,5 @@
-import { getFileById } from './File'
-import { getFolderByName } from './Folder'
+import File from './File'
+import Folder from './Folder'
 import { Link, Item as TItem } from './types/APICall.types'
 import { APIElementProps } from './types/APIElement.types'
 import {
@@ -21,7 +21,7 @@ export default class Job extends Item<TJob> {
     }
 
     static init = async ({ baseURL, name, path }: InitProps) => {
-        const folder = await getFolderByName({
+        const folder = await Folder.getFolderByName({
             baseURL: baseURL,
             path: path.split('/').slice(0, -1).join('/'),
             name: path.split('/').slice(-1)[0],
@@ -126,7 +126,7 @@ export default class Job extends Item<TJob> {
             )
             if (resultKey) {
                 const id = response.data.results[resultKey].split('/').pop()!
-                const file = await getFileById({ baseURL: this.baseURL, id: id })
+                const file = await File.getFileById({ baseURL: this.baseURL, id: id })
                 if (file) {
                     const link = findElement(file.info.links, 'content') as Link
                     const call = new APICall({ baseURL: this.baseURL, link: link })

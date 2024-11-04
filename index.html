@@ -9,7 +9,7 @@
     </head>
     <body>
         <div id="app"></div>
-        <iframe
+        <!-- <iframe
             style="width: 100vw; height: 100vh"
             id="output"
             frameborder="0"></iframe>
@@ -25,14 +25,14 @@
             const output = await job.execute({ args: args, resultFileName: '_webout.json' })
             console.log(output)
             document.getElementById('output').srcdoc = output
-        </script>
+        </script> -->
 
         <button
             type="submit"
             id="closeSession">
             Close Session
         </button>
-        <!--script type="module">
+        <script type="module">
             import { ComputeSession, getComputeContexts } from './src/main.ts'
 
             const populateDropdown = (dropdown, options) => {
@@ -141,6 +141,6 @@
             document.getElementById('closeSession').onclick = () => {
                 computeSession.deleteSession()
             }
-        </script-->
+        </script>
     </body>
 </html>

@@ -2,7 +2,7 @@ import { Link } from './types/APICall.types'
 import APICall from './utils/APICall'
 import { findElement, generateOutput } from './utils/functions'
 
-import { getComputeContext } from './ComputeContext'
+import ComputeContext from './ComputeContext'
 import {
     CheckComputeJobStateProps,
     ComputeServerColumn,
@@ -35,7 +35,10 @@ export default class ComputeSession extends Item<TComputeSession> {
         baseURL,
         contextName = 'SAS Job Execution compute context',
     }: InitComputeSessionProps) => {
-        const context = await getComputeContext({ baseURL: baseURL, contextName: contextName })
+        const context = await ComputeContext.getComputeContextByName({
+            baseURL: baseURL,
+            contextName: contextName,
+        })
         if (context) {
             const link = findElement(context.info.links, 'createSession') as Link
             const call = new APICall({ baseURL: baseURL, link: link })
