@@ -1,23 +1,48 @@
 import { getFileById } from './File'
 import { getFolderByName } from './Folder'
 import { Link, Item as TItem } from './types/APICall.types'
-import { ItemProps } from './types/Item.types'
+import { APIElementProps } from './types/APIElement.types'
 import {
     CheckJobParametersProps,
     CheckJobStateProps,
     ExecuteJobProps,
-    GetJobDefinitionProps,
     GetJobResultProps,
+    InitProps,
     JobExecution,
     JobDefinition as TJob,
 } from './types/Job.types'
 import APICall from './utils/APICall'
+import Item from './utils/APIElement'
 import { findElement } from './utils/functions'
-import Item from './utils/Item'
 
 export default class Job extends Item<TJob> {
-    constructor({ baseURL, info }: ItemProps<TJob>) {
+    private constructor({ baseURL, info }: APIElementProps<TJob>) {
         super({ baseURL: baseURL, info: info })
+    }
+
+    static init = async ({ baseURL, name, path }: InitProps) => {
+        const folder = await getFolderByName({
+            baseURL: baseURL,
+            path: path.split('/').slice(0, -1).join('/'),
+            name: path.split('/').slice(-1)[0],
+        })
+        if (folder) {
+            const folderMembers = await folder.getMembers()
+            if (folderMembers) {
+                const member = findElement(folderMembers.items, name) as TItem
+                const link = findElement(member.links, 'getResource') as Link
+                const call = new APICall({
+                    baseURL: baseURL,
+                    link: link,
+                })
+                const response = await call.execute()
+                if (response) {
+                    return new Job({ baseURL: baseURL, info: response.data })
+                } else {
+                    throw new Error('Failed to get job definition')
+                }
+            }
+        }
     }
 
     getJobDefinition = () => {
@@ -114,31 +139,6 @@ export default class Job extends Item<TJob> {
         }
         if (response) {
             return response.data.results
-        }
-    }
-}
-
-export const getJobDefinition = async ({ baseURL, name, path }: GetJobDefinitionProps) => {
-    const folder = await getFolderByName({
-        baseURL: baseURL,
-        path: path.split('/').slice(0, -1).join('/'),
-        name: path.split('/').slice(-1)[0],
-    })
-    if (folder) {
-        const folderMembers = await folder.getMembers()
-        if (folderMembers) {
-            const member = findElement(folderMembers.items, name) as TItem
-            const link = findElement(member.links, 'getResource') as Link
-            const call = new APICall({
-                baseURL: baseURL,
-                link: link,
-            })
-            const response = await call.execute()
-            if (response) {
-                return new Job({ baseURL: baseURL, info: response.data })
-            } else {
-                throw new Error('Failed to get job definition')
-            }
         }
     }
 }

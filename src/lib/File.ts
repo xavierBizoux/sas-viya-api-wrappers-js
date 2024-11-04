@@ -1,9 +1,9 @@
 import { Link } from './types/APICall.types'
+import { ItemProps } from './types/APIElement.types'
 import { GetFileByIdProps, File as TFile } from './types/File.types'
-import { ItemProps } from './types/Item.types'
 import APICall from './utils/APICall'
+import Item from './utils/APIElement'
 import { findElement } from './utils/functions'
-import Item from './utils/Item'
 
 export default class File extends Item<TFile> {
     constructor({ baseURL, info }: ItemProps<TFile>) {

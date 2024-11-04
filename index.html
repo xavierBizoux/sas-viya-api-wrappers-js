@@ -9,14 +9,14 @@
     </head>
     <body>
         <div id="app"></div>
-        <!-- <iframe
+        <iframe
             style="width: 100vw; height: 100vh"
             id="output"
             frameborder="0"></iframe>
 
         <script type="module">
-            import { Job, getJobDefinition } from './src/main.ts'
-            const job = await getJobDefinition({
+            import { Job } from './src/main.ts'
+            const job = await Job.init({
                 baseURL: 'https://server.demo.sas.com',
                 name: 'Test Json',
                 path: '/Users/student/My Folder',
@@ -25,15 +25,15 @@
             const output = await job.execute({ args: args, resultFileName: '_webout.json' })
             console.log(output)
             document.getElementById('output').srcdoc = output
-        </script> -->
+        </script>
 
         <button
             type="submit"
             id="closeSession">
             Close Session
         </button>
-        <script type="module">
-            import { initializeComputeSession, getComputeContexts } from './src/main.ts'
+        <!--script type="module">
+            import { ComputeSession, getComputeContexts } from './src/main.ts'
 
             const populateDropdown = (dropdown, options) => {
                 const topElement = document.createElement('option')
@@ -49,15 +49,17 @@
                 })
                 dropdown.disabled = false
             }
-
-            const computeSession = await initializeComputeSession({
-                baseURL: 'https://server.demo.sas.com',
+            const baseURL = 'https://server.demo.sas.com'
+            const computeSession = await ComputeSession.init({
+                baseURL: baseURL,
             })
             const App = document.getElementById('app')
             const div = document.createElement('div')
 
             const selectContext = document.createElement('select')
-            const contexts = await getComputeContexts({ baseURL: 'https://server.demo.sas.com' })
+            const contexts = await getComputeContexts({
+                baseURL: baseURL,
+            })
             if (contexts) {
                 populateDropdown(selectContext, contexts)
             }
@@ -139,6 +141,6 @@
             document.getElementById('closeSession').onclick = () => {
                 computeSession.deleteSession()
             }
-        </script>
+        </script-->
     </body>
 </html>

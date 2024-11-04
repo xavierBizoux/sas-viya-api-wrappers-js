@@ -45,7 +45,7 @@ export type JobRequest = {
     version: number
 }
 
-export type GetJobDefinitionProps = {
+export type InitProps = {
     baseURL: string
     path: string
     name: string

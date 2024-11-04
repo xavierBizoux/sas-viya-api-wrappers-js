@@ -1,9 +1,9 @@
 import { Link } from './types/APICall.types'
+import { ItemProps } from './types/APIElement.types'
 import { GetFolderByNameProps, Folder as TFolder } from './types/Folder.types'
-import { ItemProps } from './types/Item.types'
 import APICall from './utils/APICall'
+import Item from './utils/APIElement'
 import { findElement } from './utils/functions'
-import Item from './utils/Item'
 
 export default class Folder extends Item<TFolder> {
     constructor({ baseURL, info }: ItemProps<TFolder>) {

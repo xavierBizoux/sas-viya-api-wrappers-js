@@ -15,20 +15,38 @@ import {
     ExecuteCodeProps,
     GetColumnProps,
     GetColumnsProps,
-    GetComputeSessionProps,
     GetJobResultProps,
     GetLibrariesProps,
     GetLibraryProps,
     GetTableProps,
     GetTablesProps,
     GetValuesProps,
+    InitComputeSessionProps,
     ComputeSession as TComputeSession,
 } from './types/ComputeSession.types'
-import Item from './utils/Item'
+import Item from './utils/APIElement'
 
 export default class ComputeSession extends Item<TComputeSession> {
-    constructor({ baseURL, info }: ComputeSessionProps) {
+    private constructor({ baseURL, info }: ComputeSessionProps) {
         super({ baseURL: baseURL, info: info })
+    }
+
+    static init = async ({
+        baseURL,
+        contextName = 'SAS Job Execution compute context',
+    }: InitComputeSessionProps) => {
+        const context = await getComputeContext({ baseURL: baseURL, contextName: contextName })
+        if (context) {
+            const link = findElement(context.info.links, 'createSession') as Link
+            const call = new APICall({ baseURL: baseURL, link: link })
+            const response = await call.execute()
+            if (response) {
+                return new ComputeSession({
+                    baseURL: baseURL,
+                    info: response.data as TComputeSession,
+                })
+            }
+        }
     }
 
     deleteSession = async ({ logout = false }: DeleteSessionProps) => {
@@ -224,21 +242,6 @@ export default class ComputeSession extends Item<TComputeSession> {
                 })
                 .join(' and ')
             return whereClause
-        }
-    }
-}
-
-export const initializeComputeSession = async ({
-    baseURL,
-    contextName = 'SAS Job Execution compute context',
-}: GetComputeSessionProps) => {
-    const context = await getComputeContext({ baseURL: baseURL, contextName: contextName })
-    if (context) {
-        const link = findElement(context.info.links, 'createSession') as Link
-        const call = new APICall({ baseURL: baseURL, link: link })
-        const response = await call.execute()
-        if (response) {
-            return new ComputeSession({ baseURL: baseURL, info: response.data as TComputeSession })
         }
     }
 }

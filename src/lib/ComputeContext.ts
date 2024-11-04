@@ -1,13 +1,13 @@
 import { Link } from './types/APICall.types'
+import { ItemProps } from './types/APIElement.types'
 import {
     GetComputeContextProps,
     GetComputeContextsProps,
     ComputeContext as TComputeContext,
 } from './types/ComputeContext.type'
-import { ItemProps } from './types/Item.types'
 import APICall from './utils/APICall'
+import Item from './utils/APIElement'
 import { findElement, generateOutput } from './utils/functions'
-import Item from './utils/Item'
 
 export default class ComputeContext extends Item<TComputeContext> {
     constructor({ baseURL, info }: ItemProps<TComputeContext>) {

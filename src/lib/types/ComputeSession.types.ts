@@ -118,7 +118,7 @@ export type DeleteSessionProps = {
     logout?: boolean
 }
 
-export type GetComputeSessionProps = {
+export type InitComputeSessionProps = {
     baseURL: string
     contextName: string
 }
