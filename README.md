@@ -132,6 +132,8 @@ const job = new Job.init({
 })
 ```
 
+**Note**: The code of the job should include %JESBEGIN and %JESEND macro variables if you want to use the \_webout destination for the output of your job.
+
 The following parameters should be used to instantiate the class:
 
 -   baseURL: string
