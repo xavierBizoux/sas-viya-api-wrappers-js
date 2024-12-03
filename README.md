@@ -165,3 +165,4 @@ In this section, you can find examples of web applications and their related cod
 
 -   [samples/js-job-simple](samples/js-job-simple): demonstrate how to create a simple prompt for a SAS Viya Job
 -   [samples/js-job-simple](samples/js-job-avanced): demonstrate how to create a customized prompt for a SAS Viya Job
+-   [samples/js-jobExec-simple](samples/js-jobExec-simple): demonstrate how to create a simple prompt and execute a Viya Job when user interacts with the web page

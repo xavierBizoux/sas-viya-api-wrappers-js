@@ -9,25 +9,86 @@
     </head>
     <body>
         <div id="app"></div>
-        <!-- <iframe
-            style="width: 100vw; height: 100vh"
+        <iframe
+            style="width: 95vw; height: 95vh"
             id="output"
             frameborder="0"></iframe>
 
         <script type="module">
-            import { Job } from './src/main.ts'
-            const job = await Job.init({
-                baseURL: 'https://server.demo.sas.com',
-                name: 'Test Json',
-                path: '/Users/student/My Folder',
-            })
-            const args = { sex: 'M', age: 14, _output_type: 'json' }
-            const output = await job.execute({ args: args, resultFileName: '_webout.json' })
-            console.log(output)
-            document.getElementById('output').srcdoc = output
-        </script> -->
+            import { Job, ComputeSession, getComputeContexts } from './src/main.ts'
 
-        <button
+            const populateDropdown = (dropdown, options) => {
+                const topElement = document.createElement('option')
+                topElement.text = '-- Select --'
+                topElement.disabled = true
+                topElement.selected = true
+                dropdown.appendChild(topElement)
+                options.forEach((option) => {
+                    const optionElement = document.createElement('option')
+                    optionElement.value = option
+                    optionElement.text = option
+                    dropdown.appendChild(optionElement)
+                })
+                dropdown.disabled = false
+            }
+            const baseURL = 'https://server.demo.sas.com'
+            const computeSession = await ComputeSession.init({
+                baseURL: baseURL,
+            })
+            const selectColumn = document.createElement('select')
+            const columns = await computeSession.getColumns({
+                libraryName: 'SASHELP',
+                tableName: 'CLASS',
+                outputType: 'api',
+            })
+            if (columns) {
+                const options = columns.map((column) => column.name)
+                populateDropdown(selectColumn, options)
+            }
+            selectColumn.onchange = async () => {
+                selectValue.replaceChildren()
+                selectValue.disabled = true
+                const data = await computeSession.getValues({
+                    libraryName: 'SASHELP',
+                    tableName: 'CLASS',
+                    columnName: selectColumn.value,
+                })
+                if (data) {
+                    populateDropdown(selectValue, data)
+                }
+            }
+            const selectValue = document.createElement('select')
+            selectValue.onchange = async () => {
+                const data = await computeSession.getValues({
+                    libraryName: 'SASHELP',
+                    tableName: 'CLASS',
+                    columnName: selectColumn.value,
+                })
+                if (data) {
+                    console.log(columns)
+                    const job = await Job.init({
+                        baseURL: 'https://server.demo.sas.com',
+                        name: 'Test Json',
+                        path: '/Users/student/My Folder',
+                    })
+                    const args = {
+                        _output_type: 'json',
+                        value: selectValue.value,
+                        column: selectColumn.value,
+                        type: columns.find((column) => column.name === selectColumn.value).type,
+                    }
+                    const output = await job.execute({ args: args, resultFileName: '_webout.json' })
+                    document.getElementById('output').srcdoc = output
+                }
+            }
+            const App = document.getElementById('app')
+            const div = document.createElement('div')
+            div.appendChild(selectColumn)
+            div.appendChild(selectValue)
+            App?.appendChild(div)
+        </script>
+
+        <!-- <button
             type="submit"
             id="closeSession">
             Close Session
@@ -141,6 +202,6 @@
             document.getElementById('closeSession').onclick = () => {
                 computeSession.deleteSession()
             }
-        </script>
+        </script-->
     </body>
 </html>
