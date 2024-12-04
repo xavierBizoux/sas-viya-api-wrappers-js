@@ -5,6 +5,13 @@ This repository contains JavaScript classes which can be used to interact with S
 Currently, the package contains wrapper for:
 
 -   SAS Compute Server
+-   SAS Job Execution
+
+Other wrappers are also available, and are mainly used by the wrappers listed above.
+
+-   SAS Content Server File
+-   SAS Content Server Folder
+-   SAS Compute Server Context
 
 ## Prerequisite
 
@@ -64,20 +71,23 @@ The class exposes the following methods:
 This wrapper is created as a class. The class can be instantiated using the following code:
 
 ```js
-const computeSession = new ComputeSession({
+const computeSession = new ComputeSession.init({
     baseURL: 'https://server.demo.sas.com',
     contextName: 'SAS Job Execution compute context',
 })
 ```
 
-The following parameters can be used to instantiate the class:
+The following parameters should be used to instantiate the class:
 
 -   baseURL: string
 -   contextName?: string
 
 The class exposes the following methods:
 
--   getComputeContexts()
+-   static init(
+    baseURL: string,
+    contextName: string
+    )
 -   getLibraries(
     outputType?: OutputType
     searchParams?: URLSearchParams
@@ -103,10 +113,55 @@ The class exposes the following methods:
     }[]
     )
 -   executeCode(
-    code: string[]
+    code: string | string[]
     resultName: string
     )
--   deleteSession()
+-   deleteSession(
+    logout: boolean
+    )
+
+### SAS Job Execution API
+
+This wrapper is created as a class. The class can be instantiated using the following code:
+
+```js
+const job = new Job.init({
+    baseURL: 'https://server.demo.sas.com',
+    name: 'Test',
+    path: '/Users/student/My Folder',
+})
+```
+
+**Note**: The code of the job should include %JESBEGIN and %JESEND macro variables if you want to use the \_webout destination for the output of your job.
+
+The following parameters should be used to instantiate the class:
+
+-   baseURL: string
+-   name: string
+-   path: string
+
+The class exposes the following methods:
+
+-   static init(
+    baseURL: string,
+    name: string,
+    path: string
+    )
+-   getJobDefinition()
+-   getJobParameters()
+-   checkJobParameters(
+    args: [key: string]: string | number
+    )
+-   execute(
+    args [key: string]: string | number
+    checkDelay: number (of seconds),
+    checkInterval: number (of seconds),
+    resultFileName?: string
+    )
+-   getJobResult(
+    jobExecution: JobExecution
+    resultFileName?: string
+    )
 
 ## Samples
 
@@ -116,3 +171,4 @@ In this section, you can find examples of web applications and their related cod
 
 -   [samples/js-job-simple](samples/js-job-simple): demonstrate how to create a simple prompt for a SAS Viya Job
 -   [samples/js-job-simple](samples/js-job-avanced): demonstrate how to create a customized prompt for a SAS Viya Job
+-   [samples/js-jobExec-simple](samples/js-jobExec-simple): demonstrate how to create a simple prompt and execute a Viya Job when user interacts with the web page
