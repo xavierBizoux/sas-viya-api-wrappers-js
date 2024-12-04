@@ -156,15 +156,15 @@ export default class ComputeSession extends Item<TComputeSession> {
         }
     }
     getValues = async ({ libraryName, tableName, columnName, filters }: GetValuesProps) => {
-        let sql = `proc sql; create view promptValues as select distinct ${columnName} from ${libraryName}.${tableName};quit;`
+        let sql = `proc sql; create view promptValues${columnName} as select distinct ${columnName} from ${libraryName}.${tableName};quit;`
         if (filters) {
             const whereClause = this.buildWhereClause(filters)
-            sql = `proc sql; create view promptValues as select distinct ${columnName} from ${libraryName}.${tableName} where ${whereClause};quit;`
+            sql = `proc sql; create view promptValues${columnName} as select distinct ${columnName} from ${libraryName}.${tableName} where ${whereClause};quit;`
         }
         const code = [
             sql,
             'filename json temp;',
-            'proc json out=json pretty nokeys nosastags; export promptValues ; run;',
+            `proc json out=json pretty nokeys nosastags; export promptValues${columnName} ; run;`,
         ]
         return await this.executeCode({ code: code, resultName: 'json' })
     }
