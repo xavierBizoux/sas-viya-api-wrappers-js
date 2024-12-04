@@ -161,7 +161,7 @@ export default class ComputeSession extends Item<TComputeSession> {
             const whereClause = this.buildWhereClause(filters)
             sql = `proc sql; create view promptValues${columnName} as select distinct ${columnName} from ${libraryName}.${tableName} where ${whereClause};quit;`
         }
-        const jsonFileName = 'J' + Math.floor(Math.random() * 1000000)
+        const jsonFileName = 'json' + Math.floor(Math.random() * 1000000)
         const code = [
             sql,
             `filename ${jsonFileName} temp;`,
