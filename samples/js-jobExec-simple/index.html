@@ -18,21 +18,21 @@
                     "sas-wrappers": "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js"
                 },
                 "integrity": {
-                    "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js": "sha256-ZRLyPDXD5UXosNHJwNCXcpjkw5i9nec9ZlZZZM6suvY="
+                    "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js": "sha256-j6OKFOF/HezzE2bRI1HRJCpbE24a77z6yyAh7QAV11A="
                 }
             }
         </script>
         <title>Call API</title>
     </head>
-    <body>
+    <body class="container d-flex flex-column min-vh-100">
         <div id="app"></div>
         <iframe
-            style="width: 95vw; height: 95vh"
+            class="min-h-100 flex-grow-1"
             id="output"
             frameborder="0"></iframe>
 
         <script type="module">
-            import { Job, ComputeSession, getComputeContexts } from 'sas-wrappers'
+            import { Job, ComputeSession } from 'sas-wrappers'
 
             const populateDropdown = (dropdown, options) => {
                 const topElement = document.createElement('option')
@@ -49,23 +49,58 @@
                 dropdown.disabled = false
             }
 
-            const generatePrompts = async (prompts, computeSession) => {
-                const promptsDiv = document.createElement('div')
-                prompts.forEach(async (prompt) => {
-                    const select = document.createElement('select')
-                    select.id = prompt.name
-                    select.name = prompt.name
-                    const options = await computeSession.getValues({
+            const generatePrompts = async (prompts) => {
+                prompts.sort((a, b) => {
+                    return a.name.localeCompare(b.name)
+                })
+
+                const promptsInfo = prompts.map((prompt) => {
+                    return {
+                        ...prompt,
                         libraryName: prompt.name.split('_')[0],
                         tableName: prompt.name.split('_')[1],
                         columnName: prompt.name.split('_')[2],
+                    }
+                })
+                const button = document.createElement('button')
+                button.id = 'executeBtn'
+                button.innerText = 'Execute'
+                const promptsDiv = document.createElement('div')
+                promptsDiv.id = 'prompts'
+                promptsDiv.classList.add('d-flex', 'flex-column', 'align-items-center')
+                button.classList.add('btn', 'btn-primary', 'w-0')
+                button.onclick = async () => {
+                    const output = await job.execute({
+                        args: args,
+                        resultFileName: '_webout.html',
                     })
-                    console.log(options)
+                    document.getElementById('output').srcdoc = output
+                    await computeSession.deleteSession()
+                }
+                promptsDiv.appendChild(button)
+                promptsInfo.forEach(async (prompt) => {
+                    const element = document.createElement('div')
+                    element.classList.add('w-50', 'my-2', 'flex', 'row', 'align-items-center')
+                    const select = document.createElement('select')
+                    select.id = prompt.name
+                    select.name = prompt.name
+                    select.classList.add('form-select', 'col')
+                    const label = document.createElement('label')
+                    label.htmlFor = prompt.name
+                    label.innerText = prompt.columnName.toUpperCase()
+                    label.classList.add('col-3')
+                    element.appendChild(label)
+                    element.appendChild(select)
+                    button.before(element)
+                    const options = await computeSession.getValues({
+                        libraryName: prompt.libraryName,
+                        tableName: prompt.tableName,
+                        columnName: prompt.columnName,
+                    })
                     populateDropdown(select, options)
                     select.onchange = async () => {
                         args[prompt.name] = select.value
                     }
-                    promptsDiv.appendChild(select)
                 })
                 return promptsDiv
             }
@@ -89,17 +124,8 @@
                 _output_type: 'html',
             }
 
-            const promptsDiv = await generatePrompts(prompts, computeSession)
+            const promptsDiv = await generatePrompts(prompts)
             document.getElementById('app').appendChild(promptsDiv)
-
-            const button = document.createElement('button')
-            button.id = 'execute'
-            button.innerText = 'Execute'
-            button.onclick = async () => {
-                const output = await job.execute({ args: args, resultFileName: '_webout.html' })
-                document.getElementById('output').srcdoc = output
-            }
-            document.getElementById('app').appendChild(button)
         </script>
     </body>
 </html>
