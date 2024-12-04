@@ -1,7 +1,7 @@
 {
     "name": "sas-viya-api-wrappers-js",
     "private": false,
-    "version": "2.0.1",
+    "version": "2.0.2",
     "type": "module",
     "license": "Apache-2.0",
     "author": {
