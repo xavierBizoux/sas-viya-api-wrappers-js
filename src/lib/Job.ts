@@ -13,7 +13,7 @@ import {
 } from './types/Job.types'
 import APICall from './utils/APICall'
 import Item from './utils/APIElement'
-import { findElement } from './utils/functions'
+import { delay, findElement } from './utils/functions'
 
 export default class Job extends Item<TJob> {
     private constructor({ baseURL, info }: APIElementProps<TJob>) {
@@ -69,7 +69,7 @@ export default class Job extends Item<TJob> {
         }
     }
 
-    execute = async ({ args, resultFileName = null }: ExecuteJobProps) => {
+    execute = async ({ args, checkDelay, checkInterval, resultFileName }: ExecuteJobProps) => {
         if (args) {
             this.checkJobParameters({ args: args })
         }
@@ -93,20 +93,30 @@ export default class Job extends Item<TJob> {
         if (response) {
             const jobExecution = response?.data as JobExecution
             let state = jobExecution.state
+            if (checkDelay) {
+                await delay(checkDelay * 1000)
+            }
             while (['pending', 'running'].includes(state)) {
-                state = await this.checkJobState({ job: jobExecution })
+                state = await this.checkJobState({ jobExecution })
+                if (checkInterval) {
+                    await delay(checkInterval * 1000)
+                }
             }
             if (state === 'completed') {
-                return await this.getJobResult({
-                    job: jobExecution,
-                    resultFileName: resultFileName,
-                })
+                if (resultFileName) {
+                    return await this.getJobResult({
+                        jobExecution: jobExecution,
+                        resultFileName: resultFileName,
+                    })
+                } else {
+                    return jobExecution
+                }
             }
         }
     }
 
-    private readonly checkJobState = async ({ job }: CheckJobStateProps) => {
-        const link = findElement(job.links, 'state') as Link
+    private readonly checkJobState = async ({ jobExecution }: CheckJobStateProps) => {
+        const link = findElement(jobExecution.links, 'state') as Link
         const headers = new Headers()
         headers.set('Accept', 'text/plain')
         const call = new APICall({ baseURL: this.baseURL, link: link, headers: headers })
@@ -116,8 +126,8 @@ export default class Job extends Item<TJob> {
         }
     }
 
-    private readonly getJobResult = async ({ job, resultFileName = null }: GetJobResultProps) => {
-        const link = findElement(job.links, 'self') as Link
+    readonly getJobResult = async ({ jobExecution, resultFileName }: GetJobResultProps) => {
+        const link = findElement(jobExecution.links, 'self') as Link
         const call = new APICall({ baseURL: this.baseURL, link: link })
         const response = await call.execute()
         if (response && resultFileName) {

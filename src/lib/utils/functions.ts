@@ -24,3 +24,5 @@ export const generateOutput = ({ items, outputType = 'api' }: GenerateOutputProp
         throw new Error('No items found')
     }
 }
+
+export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))

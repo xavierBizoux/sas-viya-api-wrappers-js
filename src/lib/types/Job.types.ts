@@ -54,16 +54,18 @@ export type InitProps = {
 export type ExecuteJobProps = {
     data?: object
     args?: JobArgs
-    resultFileName?: string | null
+    checkDelay?: number
+    checkInterval?: number
+    resultFileName?: string
 }
 
 export type CheckJobStateProps = {
-    job: JobExecution
+    jobExecution: JobExecution
 }
 
 export type GetJobResultProps = {
-    job: JobExecution
-    resultFileName?: string | null
+    jobExecution: JobExecution
+    resultFileName?: string
 }
 
 export type CheckJobParametersProps = {

@@ -77,7 +77,12 @@
                         column: selectColumn.value,
                         type: columns.find((column) => column.name === selectColumn.value).type,
                     }
-                    const output = await job.execute({ args: args, resultFileName: '_webout.json' })
+                    const output = await job.execute({
+                        args: args,
+                        checkDelay: 60,
+                        checkInterval: 30,
+                        resultFileName: '_webout.json',
+                    })
                     document.getElementById('output').srcdoc = output
                 }
             }

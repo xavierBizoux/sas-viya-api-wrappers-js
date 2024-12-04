@@ -154,6 +154,12 @@ The class exposes the following methods:
     )
 -   execute(
     args [key: string]: string | number
+    checkDelay: number (of seconds),
+    checkInterval: number (of seconds),
+    resultFileName?: string
+    )
+-   getJobResult(
+    jobExecution: JobExecution
     resultFileName?: string
     )
 
