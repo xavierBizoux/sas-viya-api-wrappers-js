@@ -167,7 +167,7 @@ export default class ComputeSession extends Item<TComputeSession> {
             `filename ${jsonFileName} temp;`,
             `proc json out=${jsonFileName} pretty nokeys nosastags; export promptValues${columnName} ; run;`,
         ]
-        return await this.executeCode({ code: code, resultName: `json${columnName}` })
+        return await this.executeCode({ code: code, resultName: `${jsonFileName}` })
     }
 
     executeCode = async ({ code, resultName, params }: ExecuteCodeProps) => {
