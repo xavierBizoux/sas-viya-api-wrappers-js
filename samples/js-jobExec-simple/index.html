@@ -18,7 +18,7 @@
                     "sas-wrappers": "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js"
                 },
                 "integrity": {
-                    "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js": "sha256-tNPg7gn7f2JAKiRzi0g4KiznT0Hv0uC6V8+1wY8+r6I="
+                    "https://cdn.jsdelivr.net/npm/sas-viya-api-wrappers-js/dist/sas-viya-api-wrappers-js.js": "sha256-CN4qQSlLr6yyEMc2dRQ1hJDvX09oyOvHneTD12iJMYI="
                 }
             }
         </script>
@@ -52,7 +52,6 @@
             const generatePrompts = async (prompts, computeSession) => {
                 const promptsDiv = document.createElement('div')
                 prompts.forEach(async (prompt) => {
-                    console.log(prompt)
                     const select = document.createElement('select')
                     select.id = prompt.name
                     select.name = prompt.name
