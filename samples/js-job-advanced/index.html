@@ -144,8 +144,8 @@
             </div>
         </div>
         <script type="module">
-            import * as sasWrappers from 'sas-wrappers'
-            const computeSession = new sasWrappers.ComputeSession({
+            import {ComputeSession} from 'sas-wrappers'
+            const computeSession = await ComputeSession.init({
                 baseURL: 'https://server.demo.sas.com',
                 contextName: 'SAS Job Execution compute context',
             })
