@@ -109,7 +109,7 @@
         <script type="module">
             import { ComputeSession } from 'sas-wrappers'
 
-            const computeSession = new ComputeSession({
+            const computeSession = await ComputeSession.init({
                 baseURL: 'https://server.demo.sas.com',
                 computeContext: 'SAS Job Execution compute context',
             })
